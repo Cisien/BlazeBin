@@ -59,8 +59,14 @@ jobs:
     steps:
       - name: Sleep for 15 seconds
         if: ${{ github.event_name == 'push' }}
-        run: sleep 1s
+        run: sleep 5s
         shell: bash
-        
-      #- name: Deploy to Azure
-        
+      - name: Login to azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: deploy webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'blazebin'
+          images: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main'
