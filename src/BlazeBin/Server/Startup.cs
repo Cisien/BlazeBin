@@ -11,7 +11,8 @@ namespace BlazeBin.Server
             services.AddScoped<IKeyGeneratorService, AlphaKeyGeneratorService>();
             services.AddScoped<IStorageService, FileStorageService>();
             services.AddControllers();
-            services.AddHostedService<FileGroomingWorker>();
+            services.AddHostedService<FileGroomingWorker>(); 
+            services.AddApplicationInsightsTelemetry();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
