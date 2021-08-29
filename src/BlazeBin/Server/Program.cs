@@ -14,6 +14,10 @@ namespace BlazeBin.Server
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder
+                        .ConfigureAppConfiguration((ctx,bldr) => {
+                            bldr.AddEnvironmentVariables("blazebin_")
+                            .AddApplicationInsightsSettings(developerMode: ctx.HostingEnvironment.IsDevelopment());
+                        })
                         .ConfigureLogging((ctx, bldr) =>
                         {
                             var isProd = ctx.HostingEnvironment.IsProduction();
@@ -25,6 +29,11 @@ namespace BlazeBin.Server
                                 o.SingleLine = isProd;
                                 o.TimestampFormat = "o";
                                 o.UseUtcTimestamp = isProd;
+                            });
+                            bldr.AddApplicationInsights(o => {
+                                o.FlushOnDispose = true;
+                                o.IncludeScopes = true;
+                                o.TrackExceptionsAsExceptionTelemetry = true;
                             });
                         })
                         .UseStartup<Startup>();
