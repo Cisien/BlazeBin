@@ -1,0 +1,42 @@
+﻿@inject BlazeBinStateContainer state
+@implements IDisposable
+<div class="modal-background@(state.DisplayError ? "" : " hidden")">
+    <div class="error-dialog">
+        <div class="header">
+            <span>@state.Error?.Title</span>
+        </div>
+        <div class="body">
+            @state.Error?.Text
+        </div>
+        <div class="buttons">
+            <div>
+                <button type="button" @onclick="CloseDialog">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        state.OnChange += HandleStateChange;
+    }
+
+    private async Task CloseDialog()
+    {
+        await state.Dispatch(() => state.ResetMessage());
+    }
+
+    private Task HandleStateChange()
+    {
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        state.OnChange -= HandleStateChange;
+    }
+}

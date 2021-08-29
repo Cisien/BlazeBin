@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BlazeBin</title>
+    <base href="/" />
+    <link rel="stylesheet" href="fa/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="css/application.css" />
+
+    <link rel="stylesheet" type="text/css" href="css/loading-placeholder.css" />
+
+    <link href="BlazeBin.Client.styles.css" rel="stylesheet" />
+    <link href="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.css" rel="stylesheet" />
+
+    <!--<link href="manifest.json" rel="manifest" />
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />-->
+</head>
+
+<body>
+    <main id="app">
+        <section class="container placeholder">
+            <!--placeholder content white the site loads-->
+            <div class="col-left">
+                <div class="row header">
+                    <div class="action-strip">
+                        <button class="action" disabled><i class="fa fa-file-text-o" aria-hidden="true"></i> New</button>
+                        <button class="action" disabled><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</button>
+                    </div>
+                </div>
+                <div class="row body">
+                    <div class="paste-list">
+                        <div class="paste-list-header"><span>Your Recent Uploads</span></div>
+                        <div class="paste selected">
+                            <span>https://discordapp.com/csharp</span>
+                            <div class="remove-paste-button">X</div>
+                        </div>
+                        <div class="paste">
+                            <span>amuhlkaclmue</span>
+                            <div class="remove-paste-button">X</div>
+                        </div>
+                        <div class="paste">
+                            <span>alhkmwakxwey</span>
+                            <div class="remove-paste-button">X</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-fill">
+                <div class="row header">
+                    <div class="tabstrip">
+                        <div class="tab selected">
+                            <label><i class="fa fa-file-text-o icon-lang-" aria-hidden="true"></i> <span>someawesomefile.cs</span></label>
+                        </div>
+                        <div class="new-tab">+</div>
+                    </div>
+                </div>
+                <div class="row body">
+                    <div class="editor">
+                        Console.WriteLine("Hello World");
+                    </div>
+                </div>
+            </div>
+            <footer>
+                <div class="banner">
+                    ⚠️ <span>Notice: Content posted here will be deleted after 30 days!</span>
+                </div>
+            </footer>
+        </section>
+        <span class="loading">Downloading and initializing application...</span>
+    </main>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
+    <script>require.config({ paths: { 'vs': '_content/BlazorMonaco/lib/monaco-editor/min/vs' } });</script>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
+    <script src="_content/BlazorMonaco/jsInterop.js"></script>
+    <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        // (yet another) hack to make the monaco editor behave
+        window.onresize = (e) => {
+            if (window.blazorMonaco && window.blazorMonaco.editor) {
+                window.blazorMonaco.editor.layout('editor', {});
+            }
+        };
+    </script>
+    <!--<script>navigator.serviceWorker.register('service-worker.js');</script>-->
+</body>
+
+</html>

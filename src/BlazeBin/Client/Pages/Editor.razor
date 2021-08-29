@@ -1,0 +1,236 @@
+﻿@inject BlazeBinStateContainer state
+@implements IDisposable
+
+<MonacoEditor id="editor" CssClass="editor"
+              ConstructionOptions="EditorConstructionOptions"
+              OnDidChangeModel="ModelChanged"
+              OnDidBlurEditorText="EditorTextBlur"
+              OnDidChangeModelContent="ModelContentChanged" />
+
+@code {
+    private const string ModelUriFormat = "https://bin.mod.gg/{0}/{1}";
+    private MonacoEditor? _editor;
+
+    protected override async Task OnInitializedAsync()
+    {
+        state.OnChange += HandleStateChange;
+        if (_editor == null)
+        {
+            return;
+        }
+
+        await BindState();
+    }
+
+    private async Task HandleStateChange()
+    {
+        if (_editor != null)
+        {
+            await BindState();
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task ModelContentChanged(ModelContentChangedEvent changed)
+    {
+        _ = _editor ?? throw new ArgumentException(nameof(_editor));
+
+        if (state.ActiveUpload == null)
+        {
+            await state.Dispatch(() => state.CreateUpload(true));
+        }
+
+        await state.Dispatch(() => state.SetActiveUploadDirty());
+    }
+
+    // save and raise events to notify everything else (for saving, etc)
+    private async Task ModelChanged(ModelChangedEvent changed)
+    {
+        if (state.ActiveUpload == null)
+        {
+            return;
+        }
+
+        var model = await MonacoEditor.GetModel(changed.OldModelUri);
+        if (model == null || await model.IsDisposed())
+        {
+            return;
+        }
+        var (bundleId, fileId) = GetIdsFromModelUri(model.Uri);
+
+        if (state.ActiveUpload.Id != bundleId)
+        {
+            return;
+        }
+
+        var data = await model.GetValue(EndOfLinePreference.LF, false);
+
+        await state.Dispatch(() => state.UpdateFile(fileId, data));
+    }
+
+    private async Task EditorTextBlur(MonacoEditor editor)
+    {
+        var model = await editor.GetModel();
+        await ModelChanged(new ModelChangedEvent { OldModelUri = model.Uri });
+    }
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+    {
+        _editor = editor;
+        var options = new StandaloneEditorConstructionOptions
+        {
+            AutomaticLayout = true,
+            Theme = "vs-dark"
+        };
+
+        return options;
+    }
+
+    // syncs the monaco editor models with the files in the currently loaded bundle
+    private async Task BindState()
+    {
+        _ = _editor ?? throw new ArgumentException(nameof(_editor));
+
+        var models = await MonacoEditor.GetModels();
+
+        // dispose models that aren't used anymore
+        foreach (var model in models)
+        {
+            if (!DataExistsForModel(model))
+            {
+                await model.DisposeModel();
+            }
+        }
+
+        if (state.ActiveUpload == null)
+        {
+            if (_editor == null)
+            {
+                throw new ArgumentException(nameof(_editor));
+            }
+
+            var defuncTModel = await _editor.GetModel();
+            await defuncTModel.DisposeModel();
+            return;
+        }
+
+        // create models that don't exist yet
+        foreach (var file in state.ActiveUpload.Files)
+        {
+            var modelUri = GetUriForFile(state.ActiveUpload, file);
+            TextModel? existingModel = null;
+            foreach (var model in models)
+            {
+                var isModelDisposed = false;
+                try
+                {
+                    isModelDisposed = await model.IsDisposed();
+                }
+                catch (Exception)
+                {
+                    isModelDisposed = true;
+                }
+
+                if (!isModelDisposed && model.Uri == modelUri)
+                {
+                    existingModel = model;
+                    break;
+                }
+            }
+
+            if (existingModel == null)
+            {
+                existingModel = await EnsureModelCreated(file);
+            }
+
+            if (file.Id == state.ActiveFile?.Id)
+            {
+                var editorModel = await _editor.GetModel();
+                if (editorModel?.Uri == existingModel.Uri)
+                {
+                    continue;
+                }
+                await _editor.SetModel(existingModel);
+            }
+        }
+    }
+
+    private bool DataExistsForModel(TextModel model)
+    {
+        if (state.ActiveUpload == null)
+        {
+            return false;
+        }
+
+        if (state.ActiveFile == null)
+        {
+            return false;
+        }
+
+        var (bundleId, fileId) = GetIdsFromModelUri(model.Uri);
+        if (state.ActiveUpload.Id != bundleId)
+        {
+            return false;
+        }
+
+        var existing = state.ActiveUpload.Files.SingleOrDefault(a => a.Id == fileId);
+        if (existing == null)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    private async Task<TextModel> EnsureModelCreated(FileData file)
+    {
+        var editor = _editor ?? throw new ArgumentNullException(nameof(_editor));
+        if (state.ActiveUpload == null)
+        {
+            throw new ArgumentException(nameof(state.ActiveUpload));
+        }
+
+        if (state.ActiveFile == null)
+        {
+            throw new ArgumentException(nameof(state.ActiveFile));
+        }
+
+        var modelUri = GetUriForFile(state.ActiveUpload, file);
+        var model = await MonacoEditor.GetModel(modelUri);
+
+        if (model == null || await model.IsDisposed())
+        {
+            model = await MonacoEditor.CreateModel(file.Data, file.GetLanguage(), modelUri);
+        }
+        return model;
+    }
+
+    private static string GetUriForFile(FileBundle bundle, FileData file)
+    {
+        if (string.IsNullOrWhiteSpace(bundle.Id))
+        {
+            throw new ArgumentNullException(nameof(bundle), "Attempt to get uri for file bundle with empty id");
+        }
+        if (string.IsNullOrWhiteSpace(file.Id))
+        {
+            throw new ArgumentNullException(nameof(bundle), "Attempt to get uri file with empty id");
+        }
+
+        return string.Format(ModelUriFormat, bundle.Id, file.Id);
+    }
+
+    private static (string bundleId, string fileId) GetIdsFromModelUri(string modelUri)
+    {
+        var parts = modelUri.Split('/');
+        var fileId = parts[^1];
+        var bundleId = parts[^2];
+        return (bundleId, fileId);
+    }
+
+    public void Dispose()
+    {
+        state.OnChange -= HandleStateChange;
+        GC.SuppressFinalize(this);
+    }
+
+}

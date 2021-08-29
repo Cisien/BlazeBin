@@ -1,0 +1,50 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+}
+
+html {
+    font-size: 62.5%;
+    height: 100vh;
+}
+
+html, body {
+    font-family: Segoe WPC,Segoe UI,sans-serif;
+    background-color: #252526;
+    color: #d4d4d4;
+}
+
+body {
+    font-size:1.3rem;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+    padding-bottom:61px; /* this feels like a hack to keep the content from overflowing the viewport*/
+}
+
+.loading {
+    margin: auto;
+    color: rgba(255, 255, 203, 0.8);
+    font-size: 2.0rem;
+}
+
+.monaco-aria-container {
+    display: none !important;
+}
+.editor {
+    height: 100%;
+    width: 100%;
+}
+
+i.icon-lang-::before {
+    content: '\f0f6';
+}
+
+i.icon-lang-cs::before {
+    content: 'cs';
+}

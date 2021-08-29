@@ -1,0 +1,12 @@
+{
+  "name": "blazebin",
+  "version": "1.0.0",
+  "dependencies": {
+    "monaco-editor": "^0.26.1"
+  },
+  "devDependencies": {
+    "copyfiles": "^2.4.1"
+  },
+  "scripts": {
+  }
+}

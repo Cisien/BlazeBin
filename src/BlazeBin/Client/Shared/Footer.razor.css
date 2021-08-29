@@ -1,0 +1,19 @@
+﻿footer {
+    background: rgba(255, 255, 203, 0.8);
+    color: #000;
+    line-height: 1.5;
+    font-family: monospace;
+    padding-left: 10px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 25px;
+    padding-top: 3px;
+}
+
+    footer span {
+        font-family: monospace;
+        font-style: italic;
+        padding-left: 5px;
+    }

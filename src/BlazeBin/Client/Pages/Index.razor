@@ -1,0 +1,56 @@
+﻿@page "/"
+@page "/{uploadname}"
+@implements IDisposable
+@inject BlazeBinStateContainer state
+
+
+<div class="col-left">
+    <div class="row header">
+        <ActionButtons />
+    </div>
+    <div class="row body">
+        <PasteList />
+    </div>
+</div>
+<div class="col-fill">
+    <div class="row header">
+        <TabStrip />
+    </div>
+    <div class="row body">
+        <Editor />
+    </div>
+</div>
+<ErrorDialog />
+
+@code {
+    [Parameter] public string? UploadName { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        state.OnChange += HandleStateChange;
+        
+        if (UploadName != null)
+        {
+            await state.Dispatch(() => state.ReadUpload(UploadName));
+        }
+        else if(state.Uploads == null)
+        {
+            await state.Dispatch(() => state.CreateUpload(true));
+        }
+        else if(state.Uploads!.Count > 0)
+        {
+            await state.Dispatch(() => state.SelectUpload(0));
+        }
+    }
+
+    private Task HandleStateChange()
+    {
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        state.OnChange -= HandleStateChange;
+    }
+}

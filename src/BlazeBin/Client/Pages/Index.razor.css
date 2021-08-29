@@ -1,0 +1,20 @@
+﻿.row {
+    display: flex;
+}
+
+    .row.body {
+        height: 100%;
+    }
+
+    .row.header {
+        height: 35px;
+        flex-direction: column;
+    }
+
+.col-left {
+    flex: 0 0 200px;
+}
+
+.col-fill {
+    flex: 1 1 100%;
+}
