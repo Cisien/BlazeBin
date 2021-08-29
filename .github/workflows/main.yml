@@ -54,7 +54,7 @@ jobs:
           cache-from: type=gha, scope=${{github.repository}}
 
   publish:
-    #if: ${{ github.event_name == 'push' }}
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     needs: build
     steps:
