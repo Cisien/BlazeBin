@@ -59,7 +59,7 @@ namespace BlazeBin.Server.Services
             foreach(var file in files)
             {
                 var created = File.GetCreationTimeUtc(file);
-                if(created > DateTimeOffset.UtcNow.Subtract(duration))
+                if(created < DateTimeOffset.UtcNow.Subtract(duration))
                 {
                     _logger.LogDebug("Deleting {file}", file);
                     File.Delete(file);
@@ -67,7 +67,7 @@ namespace BlazeBin.Server.Services
                 }
             }
 
-            _logger.LogDebug("Removed {amountRemoved} files older than {duration}", amountRemoved, duration);
+            _logger.LogDebug("Removed {amountRemoved} files older created before {date}", amountRemoved, DateTimeOffset.UtcNow.Subtract(duration));
 
             return Task.CompletedTask;
         }
