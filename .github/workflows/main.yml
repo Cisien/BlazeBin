@@ -69,4 +69,4 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'blazebin'
-          images: 'cisien/blazebin:main'
+          images: 'ghcr.io/cisien/blazebin:main'
