@@ -1,6 +1,28 @@
 ﻿@inherits LayoutComponentBase
 
-<section class="container">
+<section class="container@(clientSideRendered ? "" : " blur")">
     @Body
 </section>
 <Footer />
+@if (!clientSideRendered)
+{
+    <div class="loading-modal">
+        <div class="loading-text">
+            <span>BlazeBin is downloading and initializing...</span>
+        </div>
+    </div>
+}
+
+@code {
+    bool clientSideRendered = false;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            clientSideRendered = true;
+            StateHasChanged();
+        }
+        base.OnAfterRender(firstRender);
+    }
+}

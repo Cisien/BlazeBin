@@ -8,12 +8,12 @@
 }
 
 .error-dialog {
-    position: fixed;
+    position: relative;
     top: 25%;
-    left: 50%;
     min-width: 400px;
+    width: 90%;
     min-height: 150px;
-    margin-left: -200px;
+    margin: auto;
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
@@ -45,7 +45,11 @@
     vertical-align: middle;
     flex: 1;
     font-size: 2rem;
-    
+    overflow: auto;
+    white-space: initial;
+    min-height: 150px;
+    max-height: 200px;
+    word-break: break-word;
 }
 
 .buttons {

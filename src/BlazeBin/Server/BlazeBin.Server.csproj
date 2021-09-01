@@ -12,6 +12,7 @@
 
 	<ItemGroup>
 		<Watch Include="..\**\*.razor" />
+		<Watch Include="..\**\**\*.cshtml" />
 		<Watch Include="..\**\*.scss" />
 		<Watch Include="..\**\*.css" />
 		<Watch Include="..\**\*.cs" />
@@ -19,6 +20,7 @@
 		<Watch Include="..\**\*.html" />
 
 		<Watch Include="..\**\**\*.razor" />
+		<Watch Include="..\**\**\*.cshtml" />
 		<Watch Include="..\**\**\*.scss" />
 		<Watch Include="..\**\**\*.css" />
 		<Watch Include="..\**\**\*.cs" />
@@ -26,6 +28,7 @@
 		<Watch Include="..\**\**\*.html" />
 
 		<Watch Include="..\**\**\**\*.razor" />
+		<Watch Include="..\**\**\**\*.cshtml" />
 		<Watch Include="..\**\**\**\*.scss" />
 		<Watch Include="..\**\**\**\*.css" />
 		<Watch Include="..\**\**\**\*.cs" />
@@ -33,15 +36,12 @@
 		<Watch Include="..\**\**\**\*.html" />
 
 		<Watch Include="..\**\**\**\**\*.razor" />
+		<Watch Include="..\**\**\**\**\*.cshtml" />
 		<Watch Include="..\**\**\**\**\*.scss" />
 		<Watch Include="..\**\**\**\**\*.css" />
 		<Watch Include="..\**\**\**\**\*.cs" />
 		<Watch Include="..\**\**\**\**\*.js" Exclude="..\**\**\**\**\service-worker*.js" />
 		<Watch Include="..\**\**\**\**\*.html" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Watch Remove="Services\FileGroomingWorker.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

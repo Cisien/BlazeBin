@@ -48,3 +48,7 @@ i.icon-lang-::before {
 i.icon-lang-cs::before {
     content: 'cs';
 }
+
+.blur > * {
+    filter: blur(2px);
+}

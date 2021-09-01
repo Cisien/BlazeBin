@@ -1,3 +1,4 @@
+using BlazeBin.Client.Services;
 using BlazeBin.Server.Services;
 using BlazeBin.Shared.Services;
 using System.Text;
@@ -11,7 +12,11 @@ namespace BlazeBin.Server
             services.AddScoped<IKeyGeneratorService, AlphaKeyGeneratorService>();
             services.AddScoped<IStorageService, FileStorageService>();
             services.AddControllers();
-            services.AddHostedService<FileGroomingWorker>(); 
+            services.AddRazorPages();
+            services.AddHostedService<FileGroomingWorker>();
+            services.AddScoped<IClientStorageService, ServerSideClientStorageService>();
+            services.AddScoped<IUploadService, ServerSideUploadService>();
+            services.AddScoped<Client.BlazeBinStateContainer>();
             services.AddApplicationInsightsTelemetry();
         }
 
@@ -42,13 +47,13 @@ namespace BlazeBin.Server
 
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
-
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapFallbackToFile("/{param?}", "index.html");
+                endpoints.MapRazorPages();
+                endpoints.MapFallbackToFile("/_Host");
             });
         }
     }

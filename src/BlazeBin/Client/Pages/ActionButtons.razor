@@ -1,37 +1,4 @@
-﻿@inject BlazeBinStateContainer state
-@inject IJSRuntime js
-@implements IDisposable
-
-<div class="action-strip">
+﻿<div class="action-strip">
     <button class="action" @onclick="CreateNewBundle"><i class="fa fa-file-text-o" aria-hidden="true"></i> New</button>
-    <button class="action" disabled="@(state.ActiveUpload != null && state.ActiveUpload.LastServerId != null)" @onclick="SaveFileBundle"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</button>
+    <button class="action" disabled="@(State?.ActiveUpload != null && State.ActiveUpload.LastServerId != null)" @onclick="SaveFileBundle"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</button>
 </div>
-
-@code {
-    protected override void OnInitialized()
-    {
-        state.OnChange += HandleStateChange;
-    }
-
-    private Task HandleStateChange()
-    {
-        StateHasChanged();
-        return Task.CompletedTask;
-    }
-
-    private async Task CreateNewBundle(MouseEventArgs e)
-    {
-        await state.Dispatch(() =>  state.CreateUpload(true));
-    }
-
-    private async Task SaveFileBundle(MouseEventArgs e)
-    {
-        await state.Dispatch(() =>  state.SaveActiveUpload());
-    }
-
-    public void Dispose()
-    {
-        state.OnChange -= HandleStateChange;
-        GC.SuppressFinalize(this);
-    }
-}

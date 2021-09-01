@@ -1,17 +1,16 @@
-﻿using BlazeBin.Shared;
-using Microsoft.JSInterop;
+﻿using Microsoft.JSInterop;
 using System.Text.Json;
 
 namespace BlazeBin.Client.Services;
 
-public class LocalStorageService
+public class ClientSideLocalStorageService : IClientStorageService
 {
     private const string LocalStorageGetItem = "window.localStorage.getItem";
     private const string LocalStorageSetItem = "window.localStorage.setItem";
 
     private readonly IJSRuntime _js;
 
-    public LocalStorageService(IJSRuntime js)
+    public ClientSideLocalStorageService(IJSRuntime js)
     {
         _js = js;
     }

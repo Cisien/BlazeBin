@@ -1,22 +1,19 @@
-﻿
-using BlazeBin.Client.Services;
+﻿using BlazeBin.Client.Services;
 using BlazeBin.Shared;
 using BlazeBin.Shared.Services;
 using Microsoft.JSInterop;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
-using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.Json;
 
 namespace BlazeBin.Client;
 public class BlazeBinStateContainer
 {
     private readonly IJSRuntime _js;
-    private readonly HttpClient _http;
+    private readonly IUploadService _uploadSvc;
     private readonly IKeyGeneratorService _keygen;
-    private readonly LocalStorageService _storage;
+    private readonly IClientStorageService _storage;
+    private readonly ILogger<BlazeBinStateContainer> _logger;
 
     private const string HistoryPushState = "window.history.pushState";
     private const string UploadListKey = "upload-list";
@@ -32,7 +29,6 @@ public class BlazeBinStateContainer
     public FileBundle? _adHocBundle;
     public int _activeUploadIndex = -1;
     public int _activeFileIndex = -1;
-
 
     public FileData? ActiveFile
     {
@@ -77,24 +73,24 @@ public class BlazeBinStateContainer
         }
     }
 
-    public bool IsInitialized { get; private set; }
-
     public Error? Error { get; private set; }
-    public bool DisplayError { get; set; }
+    public bool DisplayError { get; private set; }
 
     public event Func<Task>? OnChange;
 
-    public BlazeBinStateContainer(IJSRuntime jsRuntime, HttpClient http, IKeyGeneratorService keygen, LocalStorageService storage)
+    public BlazeBinStateContainer(ILogger<BlazeBinStateContainer> logger, IJSRuntime jsRuntime, IUploadService uploadSvc, IKeyGeneratorService keygen, IClientStorageService storage)
     {
         _js = jsRuntime;
-        _http = http;
+        _uploadSvc = uploadSvc;
         _keygen = keygen;
         _storage = storage;
+        _logger = logger;
     }
 
     public async Task InitializeUploadLists()
     {
         Uploads = await _storage.Get<FileBundle>(UploadListKey);
+        
         if (Uploads.Count < 0)
         {
             await SelectUpload(0);
@@ -136,45 +132,23 @@ public class BlazeBinStateContainer
     public async Task ReadUpload(string serverId)
     {
         _ = Uploads ?? throw new ArgumentException(nameof(Uploads));
-
-        var response = await _http.GetAsync($"raw/{serverId}");
-        if (!response.IsSuccessStatusCode)
+        var fromApi = await _uploadSvc.Get(serverId);
+        if(!fromApi.Successful)
         {
-            ShowError($"Unable to load {serverId}", $"Server responded with {response.StatusCode}");
+            ShowError($"Unable to load {serverId}", fromApi.Error);
             return;
         }
 
-        try
+        var existingIndex = Uploads.FindIndex(a => a.Id == fromApi.Value.Id);
+        if (existingIndex != -1)
         {
-            var fromApi = await response.Content.ReadFromJsonAsync<FileBundle>();
-            if (fromApi == null)
-            {
-                ShowError($"Unable to load {serverId}", $"Server returned unexpected data");
-                return;
-            }
-            fromApi.LastServerId = serverId;
-            var existingIndex = Uploads.FindIndex(a => a.Id == fromApi.Id);
-            if (existingIndex != -1)
-            {
-                await SelectUpload(existingIndex);
-            }
-            else
-            {
-                _adHocBundle = fromApi;
-            }
-            _ = ActiveUpload ?? throw new InvalidOperationException("ActiveUpload returns null after loading an upload");
+            await SelectUpload(existingIndex);
         }
-        catch (JsonException)
+        else
         {
-            ShowError($"Unable to load {serverId}", $"Server returned unexpected data");
-            return;
+            _adHocBundle = fromApi.Value;
         }
-
-        if (ActiveUpload.Files.Count == 0)
-        {
-            ShowError($"Unable to load {serverId}", "Server data contained no files");
-            return;
-        }
+        _ = ActiveUpload ?? throw new InvalidOperationException("ActiveUpload returns null after loading an upload");
 
         SetActiveFile(0);
 
@@ -187,11 +161,6 @@ public class BlazeBinStateContainer
     public async Task DeleteUpload(string id)
     {
         _ = Uploads ?? throw new ArgumentException(nameof(Uploads));
-
-        if (ActiveUpload == null)
-        {
-            throw new ArgumentException(nameof(ActiveUpload));
-        }
 
         var uploadIndex = Uploads.FindIndex(a => a.Id == id);
         if (uploadIndex == -1)
@@ -269,32 +238,15 @@ public class BlazeBinStateContainer
             return;
         }
 
-        var body = new MultipartFormDataContent();
-        var contentJson = JsonSerializer.Serialize(ActiveUpload);
+        var result = await _uploadSvc.Set(ActiveUpload);
 
-        if (string.IsNullOrWhiteSpace(contentJson))
+        if(!result.Successful)
         {
-            ShowError($"Failed to save {ActiveUpload.Id}", "No data to upload");
+            ShowError($"Failed to save {ActiveUpload.Id}", result.Error);
             return;
         }
 
-        body.Add(new StringContent(contentJson, Encoding.UTF8, "application/json"), "file", ActiveUpload.Id);
-
-        var response = await _http.PostAsync("submit", body);
-        if (!response.IsSuccessStatusCode)
-        {
-            ShowError($"Failed to save {ActiveUpload.Id}", $"Server responded with { response.StatusCode }");
-            return;
-        }
-
-        var content = await response.Content.ReadFromJsonAsync<FileData>();
-        if (content == null)
-        {
-            ShowError($"Failed to save {ActiveUpload.Id}", $"Server response was unexpected");
-            return;
-        }
-
-        ActiveUpload.LastServerId = content.Id;
+        ActiveUpload.LastServerId = result.Value;
 
         if (!Uploads.Any(a => a.Id == ActiveUpload.Id))
         {
@@ -533,8 +485,8 @@ public class BlazeBinStateContainer
         {
             ShowError("Unhandled Exception", ex.ToString());
         }
-        Console.WriteLine($"State change call initiated from {method} {filePath}: {lineNumber}. work body: {work.Body}");
-        Console.WriteLine("State: " + JsonSerializer.Serialize(this, new JsonSerializerOptions { IncludeFields = true, WriteIndented = true, IgnoreReadOnlyFields = false }));
+        _logger.LogInformation("State change call initiated from {method} {filePath}: {lineNumber}. {dispatchedMethod}", method, filePath, lineNumber, work.Body);
+        _logger.LogInformation("State: {state}", JsonSerializer.Serialize(this, new JsonSerializerOptions { IncludeFields = true, WriteIndented = true, IgnoreReadOnlyFields = false }));
 
         await StateHasChanged();
     }
@@ -565,8 +517,8 @@ public class BlazeBinStateContainer
         {
             ShowError("Unhandled Exception", ex.ToString());
         }
-        Console.WriteLine($"State change call initiated from {method} {filePath}: {lineNumber}. work body: {work.Body}");
-        Console.WriteLine("State: " + JsonSerializer.Serialize(this, new JsonSerializerOptions { IncludeFields = true, WriteIndented = true, IgnoreReadOnlyFields = false }));
+        _logger.LogInformation("State change call initiated from {method} {filePath}: {lineNumber}. {dispatchedMethod}",method, filePath, lineNumber, work.Body);
+        _logger.LogInformation("State: {state}", JsonSerializer.Serialize(this, new JsonSerializerOptions { IncludeFields = true, WriteIndented = true, IgnoreReadOnlyFields = false }));
 
         await StateHasChanged();
     }
@@ -588,6 +540,11 @@ public class BlazeBinStateContainer
 
     private async Task StateHasChanged()
     {
+        if(_js == null)
+        {
+            throw new InvalidOperationException($"{nameof(BlazeBinStateContainer)} is not in a valid state!");
+        }
+
         if (OnChange != null)
         {
             await OnChange();

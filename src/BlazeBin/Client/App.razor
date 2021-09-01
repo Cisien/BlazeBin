@@ -1,5 +1,7 @@
 @inject BlazeBinStateContainer state;
-<ApplicationInsightsComponent />
+@inject ILogger<App> logger;
+@implements IDisposable
+
 <Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
@@ -12,9 +14,15 @@
 </Router>
 
 @code {
+    JsonSerializerOptions stateOptions = new JsonSerializerOptions { IncludeFields = true, IgnoreReadOnlyFields = false };
     public override async Task SetParametersAsync(ParameterView parameters)
     {
         await state.Dispatch(() => state.InitializeUploadLists());
         await base.SetParametersAsync(parameters);
+    }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
     }
 }
