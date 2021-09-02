@@ -113,8 +113,6 @@ public class BlazeBinStateContainer
 
     public async Task InsertUpload(FileBundle upload, bool setActive)
     {
-        _ = Uploads ?? throw new ArgumentException(nameof(Uploads));
-
         var existingIndex = Uploads.FindIndex(a => a.Id == upload.Id);
         var index = Math.Max(existingIndex, 0);
 
@@ -134,7 +132,6 @@ public class BlazeBinStateContainer
 
     public async Task ReadUpload(string serverId)
     {
-        _ = Uploads ?? throw new ArgumentException(nameof(Uploads));
         var fromApi = await _uploadSvc.Get(serverId);
         if(!fromApi.Successful)
         {
@@ -164,8 +161,6 @@ public class BlazeBinStateContainer
 
     public async Task DeleteUpload(string id)
     {
-        _ = Uploads ?? throw new ArgumentException(nameof(Uploads));
-
         var uploadIndex = Uploads.FindIndex(a => a.Id == id);
         if (uploadIndex == -1)
         {
@@ -277,7 +272,6 @@ public class BlazeBinStateContainer
         }
 
         ActiveUpload.LastServerId = null;
-        //await _js.InvokeVoidAsync(HistoryPushState, "", "", $"/");
     }
     #endregion
 

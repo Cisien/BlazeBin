@@ -4,7 +4,7 @@
             <span>Your Recent Sets</span>
         </div>
         <ul class="upload-list">
-            @foreach (var item in State!.Uploads ?? new List<FileBundle>())
+            @foreach (var item in State!.Uploads)
             {
                 <li class="paste@(item.Id == State!.ActiveUpload?.Id ? " selected" : "")" @onclick="@(e => SelectUpload(e, item.Id))" @onclick:stopPropagation @onclick:preventDefault title="@item.Id">
                     <span class="remove-paste-button" @onclick="@(e => RemoveUpload(e, @item.Id))" @onclick:stopPropagation @onclick:preventDefault>X</span>
@@ -31,7 +31,7 @@
             <span>Recently Viewed</span>
         </div>
         <ul>
-            @foreach (var item in State!.History ?? new List<string>())
+            @foreach (var item in State!.History)
             {
                 <li class="paste@(item == State!.ActiveUpload?.LastServerId ? " selected" : "")" @onclick="@(e => SelectNonFileBundle(e, item))" @onclick:stopPropagation @onclick:preventDefault>
                     <input type="radio" name="paste-list-item" id="history-list-item-@item" value="@item" />
@@ -47,7 +47,7 @@
             <span>Favorites</span>
         </div>
         <ul>
-            @foreach (var item in State!.Favorites ?? new List<string>())
+            @foreach (var item in State!.Favorites)
             {
                 <li class="paste@(item == State!.ActiveUpload?.LastServerId ? " selected" : "")" @onclick="@(e => SelectNonFileBundle(e, item))" @onclick:stopPropagation @onclick:preventDefault>
                     <input type="radio" name="paste-list-item" id="favorite-list-item-@item" value="@item" />
