@@ -8,6 +8,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.18.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="6.0.0-preview.7.21378.6" />
+		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="6.0.0-preview.7.21378.6" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -42,6 +43,11 @@
 		<Watch Include="..\**\**\**\**\*.cs" />
 		<Watch Include="..\**\**\**\**\*.js" Exclude="..\**\**\**\**\service-worker*.js" />
 		<Watch Include="..\**\**\**\**\*.html" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Watch Remove="FilesystemAvailableCheck.cs" />
+	  <Watch Remove="HealthChecks\FilesystemWritableCheck.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

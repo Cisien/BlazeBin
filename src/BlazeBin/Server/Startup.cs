@@ -1,6 +1,8 @@
 using BlazeBin.Client.Services;
+using BlazeBin.Server.HealthChecks;
 using BlazeBin.Server.Services;
 using BlazeBin.Shared.Services;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 
 namespace BlazeBin.Server
@@ -17,6 +19,10 @@ namespace BlazeBin.Server
             services.AddScoped<IClientStorageService, ServerSideClientStorageService>();
             services.AddScoped<IUploadService, ServerSideUploadService>();
             services.AddScoped<Client.BlazeBinStateContainer>();
+            services.AddHealthChecks()
+                .AddCheck<FilesystemAvailableCheck>("filesystem_availability")
+                .AddCheck<FilesystemWritableCheck>("filesystem_writable");
+
             services.AddApplicationInsightsTelemetry();
         }
 
@@ -44,7 +50,7 @@ namespace BlazeBin.Server
                     }
                 });
             }
-
+            app.UseHealthChecks("/health");
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
             app.UseRouting();
