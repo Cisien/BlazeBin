@@ -22,9 +22,9 @@ public class BlazeBinStateContainer
 
     public const int GeneratedIdLength = 12;
 
-    public List<string>? History { get; private set; }
-    public List<string>? Favorites { get; private set; }
-    public List<FileBundle>? Uploads { get; private set; }
+    public List<string> History { get; private set; }
+    public List<string> Favorites { get; private set; }
+    public List<FileBundle> Uploads { get; private set; }
 
     public FileBundle? _adHocBundle;
     public int _activeUploadIndex = -1;
@@ -85,6 +85,9 @@ public class BlazeBinStateContainer
         _keygen = keygen;
         _storage = storage;
         _logger = logger;
+        History = new();
+        Favorites = new();
+        Uploads = new();
     }
 
     public async Task InitializeUploadLists()
@@ -221,8 +224,6 @@ public class BlazeBinStateContainer
 
     public async Task SaveActiveUpload()
     {
-        _ = Uploads ?? throw new ArgumentException(nameof(Uploads));
-
         if (ActiveUpload == null)
         {
             throw new InvalidOperationException("Attempting to save a null active upload");
@@ -262,7 +263,7 @@ public class BlazeBinStateContainer
         await _storage.Set(UploadListKey, Uploads);
     }
 
-    public async Task SetActiveUploadDirty()
+    public void SetActiveUploadDirty()
     {
         if (ActiveUpload == null)
         {
@@ -275,7 +276,7 @@ public class BlazeBinStateContainer
         }
 
         ActiveUpload.LastServerId = null;
-        await _js.InvokeVoidAsync(HistoryPushState, "", "", $"/");
+        //await _js.InvokeVoidAsync(HistoryPushState, "", "", $"/");
     }
     #endregion
 
@@ -301,7 +302,6 @@ public class BlazeBinStateContainer
         {
             SetActiveFile(ActiveUpload.Files.IndexOf(newFile));
         }
-
     }
 
     public void UpdateFile(string id, string contents) // maybe do filename also later?
@@ -356,7 +356,7 @@ public class BlazeBinStateContainer
 
     public void SetActiveFile(int index)
     {
-        if(index == -1)
+        if (index == -1)
         {
             _activeFileIndex = index;
             return;
@@ -391,8 +391,6 @@ public class BlazeBinStateContainer
     #region history
     public async Task CreateHistory(string serverId)
     {
-        _ = History ?? throw new ArgumentException(nameof(History));
-
         if (History.Any(a => a == serverId))
         {
             return;
@@ -409,8 +407,6 @@ public class BlazeBinStateContainer
 
     public async Task DeleteHistory(string serverId)
     {
-        _ = History ?? throw new ArgumentException(nameof(History));
-
         var historyItem = History.SingleOrDefault(a => a == serverId);
         if (historyItem == null)
         {
@@ -540,11 +536,6 @@ public class BlazeBinStateContainer
 
     private async Task StateHasChanged()
     {
-        if(_js == null)
-        {
-            throw new InvalidOperationException($"{nameof(BlazeBinStateContainer)} is not in a valid state!");
-        }
-
         if (OnChange != null)
         {
             await OnChange();

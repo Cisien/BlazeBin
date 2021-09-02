@@ -2,7 +2,7 @@
 
 namespace BlazeBin.Client.Pages;
 
-public partial class ErrorDialog
+public partial class ErrorDialog: IDisposable
 {
     [Inject] private BlazeBinStateContainer? State { get; set; }
 
@@ -25,5 +25,6 @@ public partial class ErrorDialog
     public void Dispose()
     {
         State!.OnChange -= HandleStateChange;
+        GC.SuppressFinalize(this);
     }
 }

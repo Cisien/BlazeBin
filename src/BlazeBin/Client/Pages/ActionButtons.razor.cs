@@ -9,10 +9,9 @@ public partial class ActionButtons : IDisposable
 
     protected override void OnAfterRender(bool firstRender)
     {
-        State!.OnChange += HandleStateChange;
         if (firstRender)
         {
-            StateHasChanged();
+            State!.OnChange += HandleStateChange;
         }
         base.OnAfterRender(firstRender);
     }

@@ -6,7 +6,6 @@ namespace BlazeBin.Client.Pages;
 public partial class PasteList : IDisposable
 {
     [Inject] private BlazeBinStateContainer? State { get; set; }
-    [Inject] private ILogger<Editor>? Logger { get; set; }
 
     protected override void OnInitialized()
     {
@@ -64,7 +63,6 @@ public partial class PasteList : IDisposable
 
     private async Task SelectNonFileBundle(MouseEventArgs e, string serverId)
     {
-
         if (e.Detail > 1)
         {
             return;

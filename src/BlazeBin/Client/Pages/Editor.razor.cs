@@ -11,6 +11,7 @@ public partial class Editor : IAsyncDisposable
 
     private const string ModelUriFormat = "https://bin.mod.gg/{0}/{1}";
     private MonacoEditor? _editor;
+    private bool _hasMarkedDirty = false;
 
     public async Task EditorInitialized(MonacoEditorBase editor)
     {
@@ -31,14 +32,12 @@ public partial class Editor : IAsyncDisposable
 
     private async Task ModelContentChanged(ModelContentChangedEvent changed)
     {
-        _ = _editor ?? throw new ArgumentException(nameof(_editor));
-
-        if (State!.ActiveUpload == null)
+        if (!_hasMarkedDirty)
         {
-            await State!.Dispatch(() => State!.CreateUpload(true));
-        }
+            await State!.Dispatch(() => State!.SetActiveUploadDirty());
 
-        await State!.Dispatch(() => State!.SetActiveUploadDirty());
+            _hasMarkedDirty = true;
+        }
     }
 
     // save and raise events to notify everything else (for saving, etc)
@@ -49,7 +48,7 @@ public partial class Editor : IAsyncDisposable
             return;
         }
 
-        var model = await MonacoEditor.GetModel(changed.OldModelUri);
+        var model = await MonacoEditorBase.GetModel(changed.OldModelUri);
         if (model == null || await model.IsDisposed())
         {
             return;
@@ -64,6 +63,7 @@ public partial class Editor : IAsyncDisposable
         var data = await model.GetValue(EndOfLinePreference.LF, false);
 
         await State!.Dispatch(() => State!.UpdateFile(fileId, data));
+        _hasMarkedDirty = false;
     }
 
     private async Task EditorTextBlur(MonacoEditor editor)
@@ -89,8 +89,7 @@ public partial class Editor : IAsyncDisposable
     {
         _ = _editor ?? throw new ArgumentException(nameof(_editor));
 
-        var models = await MonacoEditor.GetModels();
-
+        var models = await MonacoEditorBase.GetModels();
         // dispose models that aren't used anymore
         foreach (var model in models)
         {
@@ -102,11 +101,6 @@ public partial class Editor : IAsyncDisposable
 
         if (State!.ActiveUpload == null)
         {
-            if (_editor == null)
-            {
-                throw new ArgumentException(nameof(_editor));
-            }
-
             var defuncTModel = await _editor.GetModel();
             if (defuncTModel != null)
             {
@@ -230,7 +224,7 @@ public partial class Editor : IAsyncDisposable
     {
         if (_editor != null)
         {
-            foreach (var model in await MonacoEditor.GetModels())
+            foreach (var model in await MonacoEditorBase.GetModels())
             {
                 await model.DisposeModel();
             }
@@ -240,5 +234,4 @@ public partial class Editor : IAsyncDisposable
         State!.OnChange -= HandleStateChange;
         GC.SuppressFinalize(this);
     }
-
 }
