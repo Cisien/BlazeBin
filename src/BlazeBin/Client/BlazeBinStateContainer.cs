@@ -149,6 +149,7 @@ public class BlazeBinStateContainer
         }
         else
         {
+            await SelectUpload(-1);
             _adHocBundle = fromApi.Value;
         }
         _ = ActiveUpload ?? throw new InvalidOperationException("ActiveUpload returns null after loading an upload");
@@ -325,6 +326,10 @@ public class BlazeBinStateContainer
         var index = ActiveUpload.Files.IndexOf(file);
         ActiveUpload.Files[index] = file with { Data = contents };
         ActiveUpload.LastServerId = null;
+        if (_adHocBundle == null)
+        {
+            _storage.Set(UploadListKey, Uploads);
+        }
     }
 
     public void DeleteFile(string id)
