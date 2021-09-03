@@ -52,6 +52,11 @@ public class StatsCollectionService : IHostedService, IAsyncDisposable
 
             foreach (var entry in entries)
             {
+                if(entry.Name == "test.txt")
+                {
+                    // health probe file
+                    continue;
+                }
                 size += entry.Length;
                 oldest = oldest > entry.CreationTimeUtc ? entry.CreationTimeUtc : oldest;
 
