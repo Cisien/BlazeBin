@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
+		<UserSecretsId>477f9bcf-270c-4408-92bf-ffc11419d8b6</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -48,6 +49,7 @@
 	<ItemGroup>
 	  <Watch Remove="FilesystemAvailableCheck.cs" />
 	  <Watch Remove="HealthChecks\FilesystemWritableCheck.cs" />
+	  <Watch Remove="Services\StatsCollectionService.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

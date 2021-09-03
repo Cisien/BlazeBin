@@ -2,7 +2,6 @@ using BlazeBin.Client.Services;
 using BlazeBin.Server.HealthChecks;
 using BlazeBin.Server.Services;
 using BlazeBin.Shared.Services;
-using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 
 namespace BlazeBin.Server
@@ -11,11 +10,11 @@ namespace BlazeBin.Server
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddScoped<IKeyGeneratorService, AlphaKeyGeneratorService>();
-            services.AddScoped<IStorageService, FileStorageService>();
+            services.AddApplicationInsightsTelemetry();
             services.AddControllers();
             services.AddRazorPages();
-            services.AddHostedService<FileGroomingWorker>();
+            services.AddScoped<IKeyGeneratorService, AlphaKeyGeneratorService>();
+            services.AddScoped<IStorageService, FileStorageService>();
             services.AddScoped<IClientStorageService, ServerSideClientStorageService>();
             services.AddScoped<IUploadService, ServerSideUploadService>();
             services.AddScoped<Client.BlazeBinStateContainer>();
@@ -23,7 +22,8 @@ namespace BlazeBin.Server
                 .AddCheck<FilesystemAvailableCheck>("filesystem_availability")
                 .AddCheck<FilesystemWritableCheck>("filesystem_writable");
 
-            services.AddApplicationInsightsTelemetry();
+            services.AddHostedService<FileGroomingWorker>();
+            services.AddHostedService<StatsCollectionService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
