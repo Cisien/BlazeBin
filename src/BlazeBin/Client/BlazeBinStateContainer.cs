@@ -2,7 +2,7 @@
 using BlazeBin.Shared;
 using BlazeBin.Shared.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -58,7 +58,7 @@ public class BlazeBinStateContainer
                 return _adHocBundle;
             }
 
-            var isOor = _activeUploadIndex < 0 || _activeUploadIndex > Uploads.Count -1;
+            var isOor = _activeUploadIndex < 0 || _activeUploadIndex > Uploads.Count - 1;
             if (isOor)
             {
                 return null;
@@ -89,7 +89,7 @@ public class BlazeBinStateContainer
     public async Task InitializeUploadLists()
     {
         Uploads = await _storage.Get<FileBundle>(UploadListKey);
-        
+
         if (Uploads.Count < 0)
         {
             SelectUpload(0);
@@ -125,10 +125,11 @@ public class BlazeBinStateContainer
         }
     }
 
+    [RequiresUnreferencedCode("Requried by System.Text.Json.JsonSerializer")]
     public async Task ReadUpload(string serverId)
     {
         var fromApi = await _uploadSvc.Get(serverId);
-        if(!fromApi.Successful)
+        if (!fromApi.Successful)
         {
             ShowError($"Unable to load {serverId}", fromApi.Error);
             return;
@@ -226,7 +227,7 @@ public class BlazeBinStateContainer
 
         var result = await _uploadSvc.Set(ActiveUpload);
 
-        if(!result.Successful)
+        if (!result.Successful)
         {
             ShowError($"Failed to save {ActiveUpload.Id}", result.Error);
             return;
@@ -381,7 +382,7 @@ public class BlazeBinStateContainer
 
     private async Task PromoteAdHocBundle()
     {
-        if(_adHocBundle == null)
+        if (_adHocBundle == null)
         {
             return;
         }
@@ -486,8 +487,7 @@ public class BlazeBinStateContainer
     }
 #else
     public async Task Dispatch(Func<Task> work)
-
-        {
+    {
         try
         {
             await work();
@@ -511,15 +511,14 @@ public class BlazeBinStateContainer
         {
             ShowError("Unhandled Exception", ex.ToString());
         }
-        _logger.LogInformation("State change call initiated from {method} {filePath}: {lineNumber}. {dispatchedMethod}",method, filePath, lineNumber, work.Body);
+        _logger.LogInformation("State change call initiated from {method} {filePath}: {lineNumber}. {dispatchedMethod}", method, filePath, lineNumber, work.Body);
         _logger.LogInformation("State: {state}", JsonSerializer.Serialize(this, new JsonSerializerOptions { IncludeFields = true, WriteIndented = true, IgnoreReadOnlyFields = false }));
 
         await StateHasChanged();
     }
 #else
     public async Task Dispatch(Action work)
-
-        {
+    {
         try
         {
             work();
@@ -536,12 +535,7 @@ public class BlazeBinStateContainer
     {
         if (ActiveUpload?.LastServerId != null && !_nav.Uri.EndsWith(ActiveUpload.LastServerId))
         {
-            try
-            {
-                _nav.NavigateTo($"/{ActiveUpload.LastServerId}", false);
-            }
-            catch (NavigationException) // thrown when attempting to navigate durring server pre-rendering todo: pull into a "history service" that can be mocked on the server
-            { }
+            _nav.NavigateTo($"/{ActiveUpload.LastServerId}", false);
         }
 
         if (OnChange != null)

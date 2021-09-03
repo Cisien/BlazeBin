@@ -1,4 +1,5 @@
 @inject BlazeBinStateContainer state;
+@inject ComponentApplicationState appState
 @inject ILogger<App> logger;
 @implements IDisposable
 
@@ -13,16 +14,28 @@
     </NotFound>
 </Router>
 
-@code {
-    JsonSerializerOptions stateOptions = new JsonSerializerOptions { IncludeFields = true, IgnoreReadOnlyFields = false };
-    public override async Task SetParametersAsync(ParameterView parameters)
+@code { public override async Task SetParametersAsync(ParameterView parameters)
     {
+        appState.OnPersisting += PersistingServerState;
         await state.Dispatch(() => state.InitializeUploadLists());
+
+        if(appState.TryTakeAsJson<Error>("server-side-error", out var serverError) && serverError != null)
+        {
+            await state.Dispatch(() => state.ShowError(serverError.Title, serverError.Text));
+        }
+
         await base.SetParametersAsync(parameters);
+    }
+
+    public Task PersistingServerState()
+    {
+        appState.PersistAsJson("server-side-error", state.Error);
+        return Task.CompletedTask;
     }
 
     public void Dispose()
     {
+        appState.OnPersisting -= PersistingServerState;
         GC.SuppressFinalize(this);
     }
 }
