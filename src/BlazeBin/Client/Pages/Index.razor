@@ -1,6 +1,8 @@
 ﻿@page "/"
 @page "/{uploadname}"
-
+<HeadContent> <!-- todo: validate fix for not showing in server-side render in preview 8/rc1 -->
+    <title>BlazeBin@(string.IsNullOrWhiteSpace(State!.ActiveUpload?.LastServerId) ? "" : $" - {State!.ActiveUpload?.LastServerId}")</title>
+</HeadContent>
 <div class="col-left">
     <div class="row header">
         <ActionButtons />

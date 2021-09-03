@@ -1,6 +1,7 @@
 ﻿using BlazeBin.Client.Services;
 using BlazeBin.Shared;
 using BlazeBin.Shared.Services;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
@@ -9,13 +10,12 @@ using System.Text.Json;
 namespace BlazeBin.Client;
 public class BlazeBinStateContainer
 {
-    private readonly IJSRuntime _js;
     private readonly IUploadService _uploadSvc;
     private readonly IKeyGeneratorService _keygen;
     private readonly IClientStorageService _storage;
     private readonly ILogger<BlazeBinStateContainer> _logger;
+    private readonly NavigationManager _nav;
 
-    private const string HistoryPushState = "window.history.pushState";
     private const string UploadListKey = "upload-list";
     private const string HistoryListKey = "history-list";
     private const string FavoritesListKey = "favorites-list";
@@ -73,16 +73,17 @@ public class BlazeBinStateContainer
 
     public event Func<Task>? OnChange;
 
-    public BlazeBinStateContainer(ILogger<BlazeBinStateContainer> logger, IJSRuntime jsRuntime, IUploadService uploadSvc, IKeyGeneratorService keygen, IClientStorageService storage)
+    public BlazeBinStateContainer(ILogger<BlazeBinStateContainer> logger, IUploadService uploadSvc, IKeyGeneratorService keygen, IClientStorageService storage, NavigationManager nav)
     {
-        _js = jsRuntime;
         _uploadSvc = uploadSvc;
         _keygen = keygen;
         _storage = storage;
         _logger = logger;
+        _nav = nav;
         History = new();
         Favorites = new();
         Uploads = new();
+
     }
 
     public async Task InitializeUploadLists()
@@ -91,7 +92,7 @@ public class BlazeBinStateContainer
         
         if (Uploads.Count < 0)
         {
-            await SelectUpload(0);
+            SelectUpload(0);
         }
 
         Favorites = await _storage.Get<string>(FavoritesListKey);
@@ -120,7 +121,7 @@ public class BlazeBinStateContainer
         await _storage.Set(UploadListKey, Uploads);
         if (setActive)
         {
-            await SelectUpload(index);
+            SelectUpload(index);
         }
     }
 
@@ -136,11 +137,11 @@ public class BlazeBinStateContainer
         var existingIndex = Uploads.FindIndex(a => a.Id == fromApi.Value.Id);
         if (existingIndex != -1)
         {
-            await SelectUpload(existingIndex);
+            SelectUpload(existingIndex);
         }
         else
         {
-            await SelectUpload(-1);
+            SelectUpload(-1);
             _adHocBundle = fromApi.Value;
         }
         _ = ActiveUpload ?? throw new InvalidOperationException("ActiveUpload returns null after loading an upload");
@@ -168,7 +169,7 @@ public class BlazeBinStateContainer
         if (Uploads.Count == 0)
         {
             SetActiveFile(-1);
-            await SelectUpload(-1);
+            SelectUpload(-1);
             return;
         }
 
@@ -182,10 +183,10 @@ public class BlazeBinStateContainer
             uploadIndex = Uploads.Count - 1;
         }
 
-        await SelectUpload(uploadIndex);
+        SelectUpload(uploadIndex);
     }
 
-    public async Task SelectUpload(int index)
+    public void SelectUpload(int index)
     {
         if (_activeUploadIndex == index)
         {
@@ -193,7 +194,6 @@ public class BlazeBinStateContainer
         }
 
         _activeUploadIndex = index;
-
         if (index == -1)
         {
             SetActiveFile(index);
@@ -204,11 +204,6 @@ public class BlazeBinStateContainer
         if (ActiveUpload!.Files.Count > 0)
         {
             SetActiveFile(0);
-        }
-
-        if (ActiveUpload.LastServerId != null)
-        {
-            await _js.InvokeVoidAsync(HistoryPushState, "", "", $"/{ActiveUpload.LastServerId}");
         }
     }
 
@@ -249,7 +244,6 @@ public class BlazeBinStateContainer
             }
         }
 
-        await _js.InvokeVoidAsync(HistoryPushState, "", "", $"/{ActiveUpload.LastServerId}");
         await _storage.Set(UploadListKey, Uploads);
     }
 
@@ -540,6 +534,16 @@ public class BlazeBinStateContainer
 
     private async Task StateHasChanged()
     {
+        if (ActiveUpload?.LastServerId != null && !_nav.Uri.EndsWith(ActiveUpload.LastServerId))
+        {
+            try
+            {
+                _nav.NavigateTo($"/{ActiveUpload.LastServerId}", false);
+            }
+            catch (NavigationException) // thrown when attempting to navigate durring server pre-rendering todo: pull into a "history service" that can be mocked on the server
+            { }
+        }
+
         if (OnChange != null)
         {
             await OnChange();

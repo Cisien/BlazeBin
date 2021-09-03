@@ -5,24 +5,43 @@ namespace BlazeBin.Client.Pages;
 public partial class Index : IDisposable
 {
     [Inject] private BlazeBinStateContainer? State { get; set; }
-    [Parameter] public string? UploadName { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    private string? _uploadName;
+    [Parameter]
+    public string? UploadName
+    {
+        get
+        {
+            return _uploadName;
+        }
+        set
+        {
+            _uploadName = value; 
+            Console.WriteLine(_uploadName);
+            _ = ProcessUploadNameChange(_uploadName);
+        }
+    }
+
+    protected override void OnInitialized()
     {
         State!.OnChange += HandleStateChange;
-        if (UploadName != null)
+    }
+
+    private async Task ProcessUploadNameChange(string? newName)
+    {
+        if (newName != null)
         {
-            var existing = State!.Uploads?.FindIndex(a => a.LastServerId == UploadName);
+            var existing = State!.Uploads?.FindIndex(a => a.LastServerId == newName);
             if (existing.HasValue && existing.Value != -1)
             {
                 await State!.Dispatch(() => State!.SelectUpload(existing.Value));
             }
             else
             {
-                await State!.Dispatch(() => State!.ReadUpload(UploadName));
+                await State!.Dispatch(() => State!.ReadUpload(newName));
             }
         }
-        else if((State!.Uploads?.Count ?? 0) > 0)
+        else if ((State!.Uploads?.Count ?? 0) > 0)
         {
             await State!.Dispatch(() => State!.SelectUpload(0));
         }

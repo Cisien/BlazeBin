@@ -1,15 +1,15 @@
 ﻿@page "/{*path:nonfile}"
 @using BlazeBin.Client
-@using Microsoft.ApplicationInsights
+@using Microsoft.AspNetCore.Components.Web
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
-@inject IConfiguration config;
+@inject IConfiguration config
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BlazeBin</title>
+    <meta name="description" content="A tool for sharing your source code with the world!" />
     <base href="~/" />
     @{ var key = config["ApplicationInsights:InstrumentationKey"];}
     @if (!string.IsNullOrWhiteSpace(key)) {
@@ -30,6 +30,7 @@
 
     <link href="BlazeBin.Client.styles.css" rel="stylesheet" />
     <link href="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.css" rel="stylesheet" />
+    <component type="typeof(HeadOutlet)" render-mode="WebAssemblyPrerendered" />
 
 </head>
 <body>
