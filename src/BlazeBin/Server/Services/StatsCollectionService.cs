@@ -25,57 +25,63 @@ public class StatsCollectionService : IHostedService, IAsyncDisposable
 
     private async Task CollectStats()
     {
-        var collectionTimer = Stopwatch.StartNew();
-        var ctsToken = _cts.Token;
-        if(ctsToken.IsCancellationRequested)
+        try
         {
-            return;
-        }
-
-        await using var scope = _provider.CreateAsyncScope();
-        var telemetryClient = scope.ServiceProvider.GetService<TelemetryClient>();
-
-        if (telemetryClient == null)
-        {
-            return;
-        }
-
-        var entries = Directory.GetFiles(_baseDir).Select(a => new FileInfo(a)).ToList();
-        var count = entries.Count;
-        var size = 0L;
-        var oldest = DateTime.UtcNow;
-
-        var largest = 0L;
-        var largestFilename = "";
-
-        foreach(var entry in entries)
-        {
-            size += entry.Length;
-            oldest = oldest > entry.CreationTimeUtc ? entry.CreationTimeUtc : oldest;
-            
-            if(entry.Length > largest)
+            var collectionTimer = Stopwatch.StartNew();
+            var ctsToken = _cts.Token;
+            if (ctsToken.IsCancellationRequested)
             {
-                largest = entry.Length;
-                largestFilename = entry.Name;
+                return;
             }
+
+            await using var scope = _provider.CreateAsyncScope();
+            var telemetryClient = scope.ServiceProvider.GetService<TelemetryClient>();
+
+            if (telemetryClient == null)
+            {
+                return;
+            }
+
+            var entries = Directory.GetFiles(_baseDir).Select(a => new FileInfo(a)).ToList();
+            var count = entries.Count;
+            var size = 0L;
+            var oldest = DateTime.UtcNow;
+
+            var largest = 0L;
+            var largestFilename = "";
+
+            foreach (var entry in entries)
+            {
+                size += entry.Length;
+                oldest = oldest > entry.CreationTimeUtc ? entry.CreationTimeUtc : oldest;
+
+                if (entry.Length > largest)
+                {
+                    largest = entry.Length;
+                    largestFilename = entry.Name;
+                }
+            }
+
+            collectionTimer.Stop();
+            var oldestDays = (DateTime.UtcNow - oldest).TotalDays;
+
+            telemetryClient.GetMetric("stats-count").TrackValue(count);
+            telemetryClient.GetMetric("stats-size").TrackValue(size);
+            telemetryClient.GetMetric("stats-oldest").TrackValue(oldestDays);
+            telemetryClient.GetMetric("stats-largest-file-size", "stats-largest-file-name").TrackValue(largest, largestFilename);
+            telemetryClient.GetMetric("stats-collection-time").TrackValue(collectionTimer.Elapsed.TotalSeconds);
+
+            _logger.LogInformation("stats-count: {count}", count);
+            _logger.LogInformation("stats-size: {size}", size);
+            _logger.LogInformation("stats-oldest: {oldest} ({date})", oldestDays, oldest);
+            _logger.LogInformation("stats-largest-file-size: {filesize}; stats-largest-file-name: {filename}", largest, largestFilename);
+            _logger.LogInformation("stats-collection-time: {collectionTime}", collectionTimer.Elapsed.TotalSeconds);
         }
-
-        collectionTimer.Stop();
-        var oldestDays = (DateTime.UtcNow - oldest).TotalDays;
-
-        telemetryClient.GetMetric("stats-count").TrackValue(count);
-        telemetryClient.GetMetric("stats-size").TrackValue(size);
-        telemetryClient.GetMetric("stats-oldest").TrackValue(oldestDays);
-        telemetryClient.GetMetric("stats-largest-file-size", "stats-largest-file-name").TrackValue(largest, largestFilename);
-        telemetryClient.GetMetric("stats-collection-time").TrackValue(collectionTimer.Elapsed.TotalSeconds);
-
-        _logger.LogInformation("stats-count: {count}", count);
-        _logger.LogInformation("stats-size: {size}", size);
-        _logger.LogInformation("stats-oldest: {oldest} ({date})", oldestDays, oldest);
-        _logger.LogInformation("stats-largest-file-size: {filesize}; stats-largest-file-name: {filename}", largest, largestFilename);
-        _logger.LogInformation("stats-collection-time: {collectionTime}", collectionTimer.Elapsed.TotalSeconds);
+        catch(Exception ex)
+        {
+            _logger.LogError("Exception while collecting statistics", ex);
+        }
     }
-
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _timer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(1));

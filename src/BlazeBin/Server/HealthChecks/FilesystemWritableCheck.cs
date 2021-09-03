@@ -4,10 +4,12 @@ namespace BlazeBin.Server.HealthChecks
 {
     public class FilesystemWritableCheck : IHealthCheck
     {
+        private readonly ILogger<FilesystemWritableCheck> _logger;
         private readonly string _basePath;
 
-        public FilesystemWritableCheck(IConfiguration config)
+        public FilesystemWritableCheck(IConfiguration config, ILogger<FilesystemWritableCheck> logger)
         {
+            _logger = logger;
             _basePath = string.IsNullOrWhiteSpace(config["BaseDirectory"]) ? "/app/data" : config["BaseDirectory"];
         }
 
@@ -26,7 +28,14 @@ namespace BlazeBin.Server.HealthChecks
             {
                 if (File.Exists(testFilename))
                 {
-                    File.Delete(testFilename);
+                    try
+                    {
+                        File.Delete(testFilename);
+                    }
+                    catch(Exception ex)
+                    {
+                        _logger.LogError("Unable to clean-up test write file", ex);
+                    }
                 }
             }
 
