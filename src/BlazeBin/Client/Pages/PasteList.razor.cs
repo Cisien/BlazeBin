@@ -40,14 +40,21 @@ public partial class PasteList : IDisposable
         await State!.Dispatch(() => State!.DeleteUpload(id));
     }
 
-    private async Task RemoveFavorite(MouseEventArgs e, string favorite)
+    private async Task ToggleFavorite(MouseEventArgs e, string favorite)
     {
         if (e.Detail > 1)
         {
             return;
         }
 
-        await State!.Dispatch(() => State!.DeleteFavorite(favorite));
+        if(State!.Favorites.Any(a => a == favorite))
+        {
+            await State!.Dispatch(() => State!.DeleteFavorite(favorite));
+        }
+        else
+        {
+            await State!.Dispatch(() => State!.CreateFavorite(favorite));
+        }
     }
 
     private async Task RemoveHistory(MouseEventArgs e, string history)

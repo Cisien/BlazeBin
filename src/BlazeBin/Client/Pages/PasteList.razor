@@ -6,14 +6,22 @@
         <ul class="upload-list">
             @foreach (var item in State!.Uploads)
             {
-                <li class="paste@(item.Id == State!.ActiveUpload?.Id ? " selected" : "")" @onclick="@(e => SelectUpload(e, item.Id))" @onclick:stopPropagation @onclick:preventDefault title="@item.Id">
-                    <span class="remove-paste-button" @onclick="@(e => RemoveUpload(e, @item.Id))" @onclick:stopPropagation @onclick:preventDefault>X</span>
+                <li class="paste@(item.Id == State!.ActiveUpload?.Id ? " selected" : "") @(item.LastServerId == null ? " dirty": "")" @onclick="@(e => SelectUpload(e, item.Id))" @onclick:stopPropagation @onclick:preventDefault title="@item.Id">
+                    <div class="remove-paste-button" @onclick="@(e => RemoveUpload(e, @item.Id))" @onclick:stopPropagation @onclick:preventDefault title="Remove @item.Id">
+                        <i class="fa fa-window-close" aria-hidden="true"></i>
+                    </div>
                     <input type="radio" name="paste-list-item" id="paste-list-item-@item.Id" value="@item.Id" checked="@(State!.ActiveUpload == item)" />
                     <label for="paste-list-item-@item.Id">@item.Id</label>
 
                     @if (item.LastServerId == null)
                     {
                         <span class="dirty-indicator" title="@item.Id has not been uploaded"></span>
+                    }
+                    else if (item.LastServerId != null)
+                    {
+                        <div class=favorite-button @onclick="@(e => ToggleFavorite(e, @item.LastServerId))" title="Toggle Favorite" @onclick:stopPropagation @onclick:preventDefault>
+                            <i class="fa fa-star@(State!.Favorites.Any(a => a == item.LastServerId) ? " active" : "")" aria-hidden="true"></i>
+                            </div>
                     }
                 </li>
             }
@@ -28,15 +36,20 @@
     </div>
     <div class="history paste-list-section">
         <div class="paste-list-header">
-            <span>Recently Viewed</span>
+            <span>Recently Viewed Sets</span>
         </div>
         <ul>
             @foreach (var item in State!.History)
             {
                 <li class="paste@(item == State!.ActiveUpload?.LastServerId ? " selected" : "")" @onclick="@(e => SelectNonFileBundle(e, item))" @onclick:stopPropagation @onclick:preventDefault>
+                    <div class="remove-paste-button" @onclick="@(e => RemoveHistory(e, @item))" @onclick:stopPropagation @onclick:preventDefault title="Remove @item">
+                        <i class="fa fa-window-close" aria-hidden="true"></i>
+                        </div>
                     <input type="radio" name="paste-list-item" id="history-list-item-@item" value="@item" />
                     <label for="history-list-item-@item">@item</label>
-                    <div class="remove-paste-button" @onclick="@(e => RemoveHistory(e, @item))" @onclick:stopPropagation @onclick:preventDefault>X</div>
+                    <div class=favorite-button @onclick="@(e => ToggleFavorite(e, @item))" title="Toggle Favorite" @onclick:stopPropagation @onclick:preventDefault>
+                        <i class="fa fa-star@(State!.Favorites.Any(a => a == item) ? " active" : "")" aria-hidden="true"></i>
+                    </div>
                 </li>
             }
         </ul>
@@ -44,7 +57,7 @@
     <div class="favorites paste-list-section">
 
         <div class="paste-list-header">
-            <span>Favorites</span>
+            <span>Favorite Sets</span>
         </div>
         <ul>
             @foreach (var item in State!.Favorites)
@@ -52,7 +65,9 @@
                 <li class="paste@(item == State!.ActiveUpload?.LastServerId ? " selected" : "")" @onclick="@(e => SelectNonFileBundle(e, item))" @onclick:stopPropagation @onclick:preventDefault>
                     <input type="radio" name="paste-list-item" id="favorite-list-item-@item" value="@item" />
                     <label for="favorite-list-item-@item">@item</label>
-                    <div class="remove-paste-button" @onclick="@(e => RemoveFavorite(e, @item))" @onclick:stopPropagation @onclick:preventDefault>X</div>
+                    <div class=favorite-button @onclick="@(e => ToggleFavorite(e, @item))" title="Toggle Favorite" @onclick:stopPropagation @onclick:preventDefault>
+                        <i class="fa fa-star active" aria-hidden="true"></i>
+                    </div>
                 </li>
             }
         </ul>

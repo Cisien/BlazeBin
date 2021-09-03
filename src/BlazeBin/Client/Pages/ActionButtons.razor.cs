@@ -6,6 +6,7 @@ namespace BlazeBin.Client.Pages;
 public partial class ActionButtons : IDisposable
 {
     [Inject] private BlazeBinStateContainer? State { get; set; }
+    private bool _saving;
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -29,7 +30,10 @@ public partial class ActionButtons : IDisposable
 
     private async Task SaveFileBundle(MouseEventArgs e)
     {
+        _saving = true;
+        StateHasChanged();
         await State!.Dispatch(() => State!.SaveActiveUpload());
+        _saving = false;
     }
 
     public void Dispose()

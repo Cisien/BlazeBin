@@ -10,7 +10,7 @@
         }
 
         <div class="tab@(item.Id == State!.ActiveFile?.Id ? " selected": "")" @onclick="@(e => TabClicked(e, @item))" @onclick:preventDefault title="@item.Filename">
-            <span class="close-tab-button" @onclick="@(e => CloseTab(e, item))" @onclick:preventDefault title="Remove File">X</span>
+            <span class="close-tab-button" @onclick="@(e => CloseTab(e, item))" @onclick:preventDefault title="Remove @item.Id"><i class="fa fa-window-close" aria-hidden="true"></i></span>
             <input type="radio" name="filetab" checked="@(item == State!.ActiveFile)" id="@item.Id" />
             <label for="@item.Id">
                 <span class="helper"></span><img src="icons/@iconImage" alt="@item.Filename" width="16" height="16" /> <span class="tab-name">@item.Filename</span>

@@ -9,7 +9,7 @@
         padding-top: 3px;
         padding-bottom: 5px;
         font-size: 1.1rem;
-        line-height: 13px;
+        line-height: 1.6rem;
         font-weight: bold;
         text-transform: uppercase;
     }
@@ -62,11 +62,24 @@
     padding-top: 3px;
     padding-bottom: 3px;
     cursor: pointer;
+    height: 25px;
 }
+
+    .paste.dirty{
+        font-style: italic;
+    }
 
     .paste:hover {
         background-color: rgba(90, 93, 94, 0.31);
     }
+
+        .paste:hover > .remove-paste-button {
+            display: inline-block;
+        }
+
+        .paste:hover > .favorite-button {
+            display: inline-block;
+        }
 
 
 input[type="radio"] {
@@ -85,7 +98,7 @@ input[type="radio"] {
 
 .remove-paste-button {
     flex: 0 0 25px;
-    display: inline-block;
+    display: none;
     padding: 1px 6px;
     float: right;
     cursor: pointer;
@@ -97,3 +110,23 @@ input[type="radio"] {
         background-color: rgba(90, 93, 94);
         padding: 0 5px;
     }
+
+.favorite-button {
+    display: none;
+    flex: 0 0 25px;
+    padding: 1px 6px;
+    float: right;
+    cursor: pointer;
+}
+
+    .favorite-button:hover {
+        border-radius: 3px;
+        border: 1px solid lightgray;
+        background-color: rgba(90, 93, 94);
+        padding: 0 5px;
+    }
+
+
+.fa-star.active {
+    color: rgb(255, 255, 203);
+}

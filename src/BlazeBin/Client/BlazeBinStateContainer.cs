@@ -58,11 +58,6 @@ public class BlazeBinStateContainer
                 return _adHocBundle;
             }
 
-            if (Uploads == null)
-            {
-                return null;
-            }
-
             var isOor = _activeUploadIndex < 0 || _activeUploadIndex > Uploads.Count -1;
             if (isOor)
             {
@@ -101,7 +96,6 @@ public class BlazeBinStateContainer
 
         Favorites = await _storage.Get<string>(FavoritesListKey);
         History = await _storage.Get<string>(HistoryListKey);
-        Favorites = new List<string> { "future" };
     }
 
     #region uploads
@@ -276,7 +270,7 @@ public class BlazeBinStateContainer
     #endregion
 
     #region files
-    public void CreateFile(string filename, bool setActive)
+    public async Task CreateFile(string filename, bool setActive)
     {
         if (ActiveUpload == null)
         {
@@ -289,6 +283,8 @@ public class BlazeBinStateContainer
             return;
         }
 
+        await PromoteAdHocBundle();
+
         var id = _keygen.GenerateKey(GeneratedIdLength).ToString();
         var newFile = FileData.Empty with { Id = id, Filename = filename.ToString() };
         ActiveUpload.Files.Add(newFile);
@@ -297,9 +293,10 @@ public class BlazeBinStateContainer
         {
             SetActiveFile(ActiveUpload.Files.IndexOf(newFile));
         }
+        await _storage.Set(UploadListKey, Uploads);
     }
 
-    public void UpdateFile(string id, string contents) // maybe do filename also later?
+    public async Task UpdateFile(string id, string contents) // maybe do filename also later?
     {
         if (ActiveUpload == null)
         {
@@ -316,17 +313,16 @@ public class BlazeBinStateContainer
         {
             return;
         }
+        await PromoteAdHocBundle();
 
         var index = ActiveUpload.Files.IndexOf(file);
         ActiveUpload.Files[index] = file with { Data = contents };
         ActiveUpload.LastServerId = null;
-        if (_adHocBundle == null)
-        {
-            _storage.Set(UploadListKey, Uploads);
-        }
+
+        await _storage.Set(UploadListKey, Uploads);
     }
 
-    public void DeleteFile(string id)
+    public async Task DeleteFile(string id)
     {
         if (ActiveUpload == null)
         {
@@ -338,6 +334,8 @@ public class BlazeBinStateContainer
         {
             return;
         }
+        await PromoteAdHocBundle();
+
         ActiveUpload.Files.RemoveAt(fileIndex);
         ActiveUpload.LastServerId = null;
         fileIndex--;
@@ -351,6 +349,7 @@ public class BlazeBinStateContainer
         {
             SetActiveFile(fileIndex);
         }
+        await _storage.Set(UploadListKey, Uploads);
     }
 
     public void SetActiveFile(int index)
@@ -384,6 +383,18 @@ public class BlazeBinStateContainer
         }
 
         _activeFileIndex = index;
+    }
+
+    private async Task PromoteAdHocBundle()
+    {
+        if(_adHocBundle == null)
+        {
+            return;
+        }
+
+        await InsertUpload(_adHocBundle, true);
+        _adHocBundle = null;
+
     }
     #endregion
 
@@ -419,37 +430,32 @@ public class BlazeBinStateContainer
     #endregion
 
     #region favorites
-    public Task CreateFavorite(string serverId)
+    public async Task CreateFavorite(string serverId)
     {
-        // NYI
+        if (Favorites.Any(a => a == serverId))
+        {
+            return;
+        }
 
-        return Task.CompletedTask;
-        //if (Favorites.Any(a => a == serverId))
-        //{
-        //    return;
-        //}
+        Favorites.Insert(0, serverId);
+        if (Favorites.Count >= 10)
+        {
+            Favorites.RemoveRange(10, Favorites.Count - 10);
+        }
 
-        //Favorites.Insert(0, serverId);
-        //if (Favorites.Count >= 10)
-        //{
-        //    Favorites.RemoveRange(10, Favorites.Count - 10);
-        //}
-
-        //await _storage.Set(FavoritesListKey, Favorites);
+        await _storage.Set(FavoritesListKey, Favorites);
     }
 
-    public Task DeleteFavorite(string serverId)
+    public async Task DeleteFavorite(string serverId)
     {
-        // NYI
-        return Task.CompletedTask;
-        //var favoriteItem = Favorites.SingleOrDefault(a => a == serverId);
-        //if (favoriteItem == null)
-        //{
-        //    return;
-        //}
+        var favoriteItem = Favorites.SingleOrDefault(a => a == serverId);
+        if (favoriteItem == null)
+        {
+            return;
+        }
 
-        //Favorites.Remove(favoriteItem);
-        //await _storage.Set(FavoritesListKey, Favorites);
+        Favorites.Remove(favoriteItem);
+        await _storage.Set(FavoritesListKey, Favorites);
     }
     #endregion
 
