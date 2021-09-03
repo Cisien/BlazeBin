@@ -371,13 +371,13 @@ public class BlazeBinStateContainer
             return;
         }
 
-        if (ActiveFile?.Id == ActiveUpload.Files[index].Id)
+        var isOutOfRange = index >= ActiveUpload.Files.Count;
+        if (isOutOfRange)
         {
             return;
         }
 
-        var isOutOfRange = index >= ActiveUpload.Files.Count;
-        if (isOutOfRange)
+        if (ActiveFile?.Id == ActiveUpload.Files[index].Id)
         {
             return;
         }
@@ -394,7 +394,6 @@ public class BlazeBinStateContainer
 
         await InsertUpload(_adHocBundle, true);
         _adHocBundle = null;
-
     }
     #endregion
 

@@ -36,6 +36,25 @@ public partial class ActionButtons : IDisposable
         _saving = false;
     }
 
+    private bool IsSavingDisabled()
+    {
+        if(_saving)
+        {
+            return true;
+        }
+        
+        if(State!.ActiveUpload != null && State.ActiveUpload.LastServerId != null)
+        {
+            return true;
+        }
+
+        if(State!.ActiveFile == null)
+        {
+            return true;
+        }
+        return false;
+    }
+
     public void Dispose()
     {
         State!.OnChange -= HandleStateChange;

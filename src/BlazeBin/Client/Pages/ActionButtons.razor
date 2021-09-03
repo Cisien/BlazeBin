@@ -1,4 +1,4 @@
 ﻿<div class="action-strip">
     <button class="action" @onclick="CreateNewBundle"><i class="fa fa-file-text-o" aria-hidden="true"></i> New</button>
-    <button class="action" disabled="@(_saving || (State?.ActiveUpload != null && State.ActiveUpload.LastServerId != null))" @onclick="SaveFileBundle"><i class="fa @(_saving ? "fa-spin fa-spinner" : "fa-floppy-o")" aria-hidden="true"></i> Save</button>
+    <button class="action" disabled="@IsSavingDisabled()" @onclick="SaveFileBundle"><i class="fa @(_saving ? "fa-spin fa-spinner" : "fa-floppy-o")" aria-hidden="true"></i> Save</button>
 </div>
