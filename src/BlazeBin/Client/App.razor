@@ -27,7 +27,6 @@
 
         if (appState.TryTakeAsJson<string>("af-token", out var afToken))
         {
-            Console.WriteLine(afToken);
             await state.Dispatch(() => state.StoreAntiforgeryToken(afToken));
         }
         else

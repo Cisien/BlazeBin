@@ -3,12 +3,18 @@ using BlazeBin.Server.HealthChecks;
 using BlazeBin.Server.Services;
 using BlazeBin.Shared.Services;
 
-using System.Text;
 
 namespace BlazeBin.Server
 {
     public class Startup
     {
+        private readonly IWebHostEnvironment _env;
+
+        public Startup(IWebHostEnvironment env)
+        {
+            _env = env;
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddApplicationInsightsTelemetry();
@@ -17,8 +23,10 @@ namespace BlazeBin.Server
                 o.HeaderName = "X-XSRF-TOKEN";
                 o.Cookie.Name = "X-XSRF-TOKEN";
                 o.FormFieldName = "X-XSRF-TOKEN";
+
+                o.Cookie.SecurePolicy = _env.IsProduction() ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest;
             });
-            services.AddCors();
+
             services.AddControllers();
             services.AddRazorPages();
             services.AddScoped<IKeyGeneratorService, AlphaKeyGeneratorService>();
@@ -61,8 +69,8 @@ namespace BlazeBin.Server
             }
 
             app.UseHealthChecks("/health");
+            app.UseHealthChecks("/robots933456.txt");
 
-            app.UseCors();
             app.Use((context, next) =>
             {
                 if (context.Response.HasStarted)
