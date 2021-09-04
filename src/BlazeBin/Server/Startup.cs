@@ -95,6 +95,9 @@ namespace BlazeBin.Server
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
+            app.UseHealthChecks("/health");
+            app.UseHealthChecks("/robots933456.txt");
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -104,18 +107,9 @@ namespace BlazeBin.Server
             {
                 if (_config.Hosting.UseForwardedHeaders)
                 {
-                    app.Use((ctx, next) =>
-                    {
-                        logger.LogInformation("before-forwarded-headers scheme: {scheme}; all headers: {headers}", ctx.Request.Scheme, JsonSerializer.Serialize(ctx.Request.Headers));
-                        return next();
-                    });
                     app.UseForwardedHeaders();
-                    app.Use((ctx, next) =>
-                    {
-                        logger.LogInformation("after-forwarded-headers scheme: {scheme}; all headers: {headers}", ctx.Request.Scheme, JsonSerializer.Serialize(ctx.Request.Headers));
-                        return next();
-                    });
                 }
+
                 app.UseHttpsRedirection();
                 app.UseHsts();
 
@@ -132,9 +126,6 @@ namespace BlazeBin.Server
                     }
                 });
             }
-
-            app.UseHealthChecks("/health");
-            app.UseHealthChecks("/robots933456.txt");
 
             app.Use((context, next) =>
             {
