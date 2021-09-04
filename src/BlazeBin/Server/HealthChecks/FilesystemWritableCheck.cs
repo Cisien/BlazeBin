@@ -12,6 +12,10 @@ public class FilesystemWritableCheck : IHealthCheck
     {
         _logger = logger;
         _basePath = Path.Combine(config.BaseDirectory, env.EnvironmentName);
+        if(!Directory.Exists(_basePath))
+        {
+            Directory.CreateDirectory(_basePath);
+        }
     }
 
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)

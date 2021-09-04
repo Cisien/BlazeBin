@@ -93,7 +93,7 @@ namespace BlazeBin.Server
             }
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
             if (env.IsDevelopment())
             {
@@ -104,7 +104,17 @@ namespace BlazeBin.Server
             {
                 if (_config.Hosting.UseForwardedHeaders)
                 {
+                    app.Use((ctx, next) =>
+                    {
+                        logger.LogInformation("before-forwarded-headers scheme: {scheme}; all headers: {headers}", ctx.Request.Scheme, JsonSerializer.Serialize(ctx.Request.Headers));
+                        return next();
+                    });
                     app.UseForwardedHeaders();
+                    app.Use((ctx, next) =>
+                    {
+                        logger.LogInformation("after-forwarded-headers scheme: {scheme}; all headers: {headers}", ctx.Request.Scheme, JsonSerializer.Serialize(ctx.Request.Headers));
+                        return next();
+                    });
                 }
                 app.UseHttpsRedirection();
                 app.UseHsts();

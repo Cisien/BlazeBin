@@ -29,11 +29,6 @@
         {
             await state.Dispatch(() => state.StoreAntiforgeryToken(afToken));
         }
-        else
-        {
-            logger.LogWarning("antiforgery token was not present");
-        }
-
         await base.SetParametersAsync(parameters);
     }
 
