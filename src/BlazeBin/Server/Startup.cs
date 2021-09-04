@@ -30,7 +30,7 @@ namespace BlazeBin.Server
 
                 o.Cookie.SecurePolicy = _env.IsProduction() ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest;
             });
-
+            
             services.AddControllers();
             services.AddRazorPages();
             services.AddScoped<IKeyGeneratorService, AlphaKeyGeneratorService>();

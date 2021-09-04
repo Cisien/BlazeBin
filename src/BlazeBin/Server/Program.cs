@@ -20,15 +20,15 @@ namespace BlazeBin.Server
                         })
                         .ConfigureLogging((ctx, bldr) =>
                         {
-                            var isProd = ctx.HostingEnvironment.IsProduction();
+                            var isDev = ctx.HostingEnvironment.IsDevelopment();
                             bldr.SetMinimumLevel(LogLevel.Trace);
                             bldr.ClearProviders();
                             bldr.AddSimpleConsole(o =>
                             {
-                                o.ColorBehavior = isProd ? LoggerColorBehavior.Disabled : LoggerColorBehavior.Enabled;
-                                o.SingleLine = isProd;
+                                o.ColorBehavior = isDev ? LoggerColorBehavior.Enabled : LoggerColorBehavior.Disabled;
+                                o.SingleLine = !isDev;
                                 o.TimestampFormat = "o";
-                                o.UseUtcTimestamp = isProd;
+                                o.UseUtcTimestamp = !isDev;
                             });
                             bldr.AddApplicationInsights(o => {
                                 o.FlushOnDispose = true;

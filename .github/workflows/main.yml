@@ -68,5 +68,6 @@ jobs:
       - name: deploy webapp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'blazebin'
-          images: 'ghcr.io/cisien/blazebin:main'
+          app-name: blazebin
+          slot-name: staging
+          images: ghcr.io/cisien/blazebin:main
