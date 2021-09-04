@@ -23,7 +23,7 @@ public class FilesystemWritableCheck : IHealthCheck
         }
         catch (Exception ex)
         {
-            var psi = new ProcessStartInfo("du", "-h")
+            var psi = new ProcessStartInfo("df", "-h")
             {
                 RedirectStandardOutput = true,
                 UseShellExecute = false
