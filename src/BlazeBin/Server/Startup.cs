@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 
 using Azure.Identity;
 
@@ -23,6 +24,7 @@ namespace BlazeBin.Server
             var blazebinConfig = new BlazeBinConfiguration();
             config.GetRequiredSection("BlazeBin").Bind(blazebinConfig, o => o.BindNonPublicProperties = true);
             _config = blazebinConfig;
+            Console.WriteLine($"Configuration: {JsonSerializer.Serialize(blazebinConfig)}");
         }
 
         public void ConfigureServices(IServiceCollection services)
@@ -72,7 +74,7 @@ namespace BlazeBin.Server
                     // These three subnets encapsulate the applicable Azure subnets. At the moment, it's not possible to narrow it down further.
                     foreach (var network in _config.Hosting.KnownNetworks)
                     {
-                        options.KnownNetworks.Add(new(IPAddress.Parse(network.Key), network.Value));
+                        options.KnownNetworks.Add(new(IPAddress.Parse(network[0]), int.Parse(network[1])));
                     }
                     foreach(var proxy in _config.Hosting.KnownProxies)
                     {

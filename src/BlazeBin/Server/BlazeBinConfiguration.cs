@@ -14,7 +14,7 @@ public class BlazeBinConfiguration
 public class BlazeBinHosting
 {
     public bool UseForwardedHeaders { get; private set; } = false;
-    public Dictionary<string, int> KnownNetworks { get; private set; } = new();
+    public List<List<string>> KnownNetworks { get; private set; } = new();
     public List<string> KnownProxies { get; private set; } = new();
     public string? ProtoHeadername { get; private set; }
     public string? ForwardedForHeaderName { get; private set; }
