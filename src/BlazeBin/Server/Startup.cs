@@ -5,6 +5,7 @@ using BlazeBin.Server.HealthChecks;
 using BlazeBin.Server.Services;
 using BlazeBin.Shared.Services;
 
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace BlazeBin.Server
 {
@@ -53,7 +54,12 @@ namespace BlazeBin.Server
             }
             else
             {
-                app.UseForwardedHeaders();
+                app.UseForwardedHeaders(new ForwardedHeadersOptions
+                {
+                    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+                    ForwardedForHeaderName = "X-Forwarded-For"
+                    ForwardedProtoHeaderName = "X-Forwarded-Proto"
+                });
                 app.UseHttpsRedirection();
                 app.UseHsts();
 
@@ -80,7 +86,7 @@ namespace BlazeBin.Server
                 {
                     return next();
                 }
-                logger.LogCritical(JsonSerializer.Serialize(context.Request.Headers));
+
                 context.Response.Headers.TryAdd("X-Frame-Options", "deny");
                 context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
                 context.Response.Headers.TryAdd("X-Permitted-Cross-Domain-Policies", "none");
