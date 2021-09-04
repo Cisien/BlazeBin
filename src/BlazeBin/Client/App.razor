@@ -1,6 +1,6 @@
-@inject BlazeBinStateContainer state;
+@inject BlazeBinStateContainer state
 @inject ComponentApplicationState appState
-@inject ILogger<App> logger;
+@inject ILogger<App> logger
 @implements IDisposable
 
 <Router AppAssembly="@typeof(Program).Assembly">
@@ -14,14 +14,25 @@
     </NotFound>
 </Router>
 
-@code { public override async Task SetParametersAsync(ParameterView parameters)
+@code {
+    public override async Task SetParametersAsync(ParameterView parameters)
     {
         appState.OnPersisting += PersistingServerState;
         await state.Dispatch(() => state.InitializeUploadLists());
 
-        if(appState.TryTakeAsJson<Error>("server-side-error", out var serverError) && serverError != null)
+        if (appState.TryTakeAsJson<Error>("server-side-error", out var serverError) && serverError != null)
         {
             await state.Dispatch(() => state.ShowError(serverError.Title, serverError.Text));
+        }
+
+        if (appState.TryTakeAsJson<string>("af-token", out var afToken))
+        {
+            Console.WriteLine(afToken);
+            await state.Dispatch(() => state.StoreAntiforgeryToken(afToken));
+        }
+        else
+        {
+            logger.LogWarning("antiforgery token was not present");
         }
 
         await base.SetParametersAsync(parameters);

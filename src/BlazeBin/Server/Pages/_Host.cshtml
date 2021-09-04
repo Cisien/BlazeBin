@@ -1,8 +1,12 @@
 ﻿@page "/{*path:nonfile}"
 @using BlazeBin.Client
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @inject IConfiguration config
+@inject ComponentApplicationState appState
+@inject IAntiforgery af
 
 <!DOCTYPE html>
 <html lang="en">
@@ -59,6 +63,12 @@
             }
         };
     </script>
+    @{
+        var tokens = af.GetAndStoreTokens(HttpContext);
+        var requestToken = tokens.RequestToken;
+
+        appState.PersistAsJson("af-token", requestToken);
+    }
     <persist-component-state />
 </body>
 </html>

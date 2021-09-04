@@ -1,6 +1,8 @@
 ﻿using BlazeBin.Server.Services;
 using BlazeBin.Shared;
 using BlazeBin.Shared.Services;
+
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using System.Buffers;
 using System.Text;
@@ -27,6 +29,7 @@ namespace BlazeBin.Server.Controllers
 
         [HttpPost("submit")]
         [RequestFormLimits(MultipartBodyLengthLimit = 409_600_000)]
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult> PostData(IFormFile file)
         {
             // buffers the contents in memory, but the RequestFormLimitsAttribute is caping that at 4mb
@@ -46,6 +49,7 @@ namespace BlazeBin.Server.Controllers
         }
 
         [HttpGet("raw/{filename}")]
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult> GetFileAsync(string filename)
         {
             var data = await _fileService.ReadDataAsync(filename);

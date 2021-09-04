@@ -1,5 +1,6 @@
 ﻿
 using BlazeBin.Shared;
+
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -8,7 +9,6 @@ namespace BlazeBin.Client.Services;
 public class ClientSideUploadService : IUploadService
 {
     private readonly HttpClient _http;
-
     public ClientSideUploadService(HttpClient http)
     {
         _http = http;
@@ -55,7 +55,7 @@ public class ClientSideUploadService : IUploadService
         }
 
         body.Add(new StringContent(contentJson, Encoding.UTF8, "application/json"), "file", item.Id);
-
+       
         var response = await _http.PostAsync("submit", body);
         if (!response.IsSuccessStatusCode)
         {
@@ -69,5 +69,10 @@ public class ClientSideUploadService : IUploadService
         }
 
         return Result<string>.FromSuccess(content.Id);
+    }
+
+    public void SetAntiforgeryToken(string? token)
+    {
+        _http.DefaultRequestHeaders.TryAddWithoutValidation("X-XSRF-TOKEN", token);
     }
 }

@@ -16,8 +16,7 @@ public partial class Index : IDisposable
         }
         set
         {
-            _uploadName = value; 
-            Console.WriteLine(_uploadName);
+            _uploadName = value;
             _ = ProcessUploadNameChange(_uploadName);
         }
     }

@@ -2,6 +2,7 @@ using BlazeBin.Client.Services;
 using BlazeBin.Server.HealthChecks;
 using BlazeBin.Server.Services;
 using BlazeBin.Shared.Services;
+
 using System.Text;
 
 namespace BlazeBin.Server
@@ -11,6 +12,13 @@ namespace BlazeBin.Server
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddApplicationInsightsTelemetry();
+            services.AddAntiforgery(o =>
+            {
+                o.HeaderName = "X-XSRF-TOKEN";
+                o.Cookie.Name = "X-XSRF-TOKEN";
+                o.FormFieldName = "X-XSRF-TOKEN";
+            });
+            services.AddCors();
             services.AddControllers();
             services.AddRazorPages();
             services.AddScoped<IKeyGeneratorService, AlphaKeyGeneratorService>();
@@ -35,6 +43,9 @@ namespace BlazeBin.Server
             }
             else
             {
+                app.UseHttpsRedirection();
+                app.UseHsts();
+
                 app.UseExceptionHandler(new ExceptionHandlerOptions
                 {
                     AllowStatusCode404Response = false,
@@ -42,19 +53,36 @@ namespace BlazeBin.Server
                     {
                         if (!context.Response.HasStarted)
                         {
-                            context.Response.ContentType = "application/json";
-                            var response = @"{""error"": ""An unknown error has occurred.""}";
-                            var bytes = Encoding.UTF8.GetBytes(response);
-                            await context.Response.BodyWriter.WriteAsync(bytes);
+                            context.Response.StatusCode = 500;
+                            await context.Response.WriteAsJsonAsync(new { Error = "An unknown error has occurred." });
                         }
                     }
                 });
             }
+
             app.UseHealthChecks("/health");
+
+            app.UseCors();
+            app.Use((context, next) =>
+            {
+                if (context.Response.HasStarted)
+                {
+                    return next();
+                }
+
+                context.Response.Headers.TryAdd("X-Frame-Options", "deny");
+                context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
+                context.Response.Headers.TryAdd("X-Permitted-Cross-Domain-Policies", "none");
+                context.Response.Headers.TryAdd("Referrer-Policy", "same-origin");
+                context.Response.Headers.TryAdd("Cross-Origin-Embedder-Policy", "require-corp");
+                context.Response.Headers.TryAdd("Cross-Origin-Opener-Policy", "same-origin");
+                context.Response.Headers.TryAdd("Cross-Origin-Resource-Policy", "same-origin");
+                return next();
+            });
+
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
             app.UseRouting();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

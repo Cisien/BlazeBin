@@ -83,7 +83,11 @@ public class BlazeBinStateContainer
         History = new();
         Favorites = new();
         Uploads = new();
+    }
 
+    public void StoreAntiforgeryToken(string? token)
+    {
+        _uploadSvc.SetAntiforgeryToken(token);
     }
 
     public async Task InitializeUploadLists()

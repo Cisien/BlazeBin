@@ -15,4 +15,8 @@ public class ServerSideUploadService : IUploadService
     {
         throw new NotSupportedException("Writing files is not supported server-side");
     }
+
+    public void SetAntiforgeryToken(string? token)
+    {
+    }
 }
