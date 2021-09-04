@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+﻿using System.Diagnostics;
+
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace BlazeBin.Server.HealthChecks;
 public class FilesystemWritableCheck : IHealthCheck
@@ -21,6 +23,22 @@ public class FilesystemWritableCheck : IHealthCheck
         }
         catch (Exception ex)
         {
+            var psi = new ProcessStartInfo("du", "-h")
+            {
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            };
+
+            var p = Process.Start(psi);
+            p.WaitForExit();
+            var output = p.StandardOutput.ReadToEnd();
+            _logger.LogError("mounts: {mounts}", output);
+
+            var root = Directory.GetDirectories("/");
+            _logger.LogError("rootDirs: {dirs}", string.Join(", ", root));
+            var app = Directory.GetDirectories("/app");
+            _logger.LogError("appDirs: {appDirs}", string.Join(", ", app));
+
             return HealthCheckResult.Unhealthy("Filesystem unwritable", ex);
         }
         finally
