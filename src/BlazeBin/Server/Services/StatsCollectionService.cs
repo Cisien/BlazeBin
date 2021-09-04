@@ -56,11 +56,6 @@ public class StatsCollectionService : IHostedService
                     return;
                 }
 
-                if(entry.Name == "test.txt")
-                {
-                    // health probe file
-                    continue;
-                }
                 size += entry.Length;
                 oldest = oldest > entry.CreationTimeUtc ? entry.CreationTimeUtc : oldest;
 

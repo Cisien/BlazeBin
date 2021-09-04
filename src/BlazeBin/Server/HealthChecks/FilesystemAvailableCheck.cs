@@ -4,7 +4,7 @@ namespace BlazeBin.Server.HealthChecks;
 public class FilesystemAvailableCheck : IHealthCheck
 {
     private readonly string _basePath;
-    public ILogger<FilesystemAvailableCheck> _logger { get; }
+    private ILogger<FilesystemAvailableCheck> _logger;
 
     public FilesystemAvailableCheck(ILogger<FilesystemAvailableCheck> logger, BlazeBinConfiguration config)
     {
