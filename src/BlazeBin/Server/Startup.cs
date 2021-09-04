@@ -51,6 +51,7 @@ namespace BlazeBin.Server
             }
             else
             {
+                app.UseForwardedHeaders();
                 app.UseHttpsRedirection();
                 app.UseHsts();
 

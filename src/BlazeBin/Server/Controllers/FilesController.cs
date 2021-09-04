@@ -2,7 +2,6 @@
 using BlazeBin.Shared;
 using BlazeBin.Shared.Services;
 
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using System.Buffers;
 using System.Text;
