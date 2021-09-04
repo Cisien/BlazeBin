@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using BlazeBin.Client.Services;
 using BlazeBin.Server.HealthChecks;
 using BlazeBin.Server.Services;
@@ -42,7 +44,7 @@ namespace BlazeBin.Server
             services.AddHostedService<StatsCollectionService>();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
             if (env.IsDevelopment())
             {
@@ -78,7 +80,7 @@ namespace BlazeBin.Server
                 {
                     return next();
                 }
-
+                logger.LogCritical(JsonSerializer.Serialize(context.Request.Headers));
                 context.Response.Headers.TryAdd("X-Frame-Options", "deny");
                 context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
                 context.Response.Headers.TryAdd("X-Permitted-Cross-Domain-Policies", "none");
