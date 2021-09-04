@@ -1,11 +1,13 @@
 using System.Net;
-using System.Text.Json;
+
+using Azure.Identity;
 
 using BlazeBin.Client.Services;
 using BlazeBin.Server.HealthChecks;
 using BlazeBin.Server.Services;
 using BlazeBin.Shared.Services;
 
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 
 namespace BlazeBin.Server
@@ -13,15 +15,32 @@ namespace BlazeBin.Server
     public class Startup
     {
         private readonly IWebHostEnvironment _env;
+        private readonly BlazeBinConfiguration _config;
 
-        public Startup(IWebHostEnvironment env)
+        public Startup(IWebHostEnvironment env, IConfiguration config)
         {
             _env = env;
+            var blazebinConfig = new BlazeBinConfiguration();
+            config.GetRequiredSection("BlazeBin").Bind(blazebinConfig, o => o.BindNonPublicProperties = true);
+            _config = blazebinConfig;
         }
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton(_config);
             services.AddApplicationInsightsTelemetry();
+            var dataProtection = services.AddDataProtection();
+
+            if (_config.DataProtection.Enabled)
+            {
+                dataProtection.PersistKeysToFileSystem(new DirectoryInfo(_config.DataProtection.KeyLocation));
+                if (!_env.IsDevelopment())
+                {
+                    dataProtection.ProtectKeysWithAzureKeyVault(new Uri(_config.DataProtection.KeyIdentifier),
+                        new DefaultAzureCredential());
+                }
+            }
+
             services.AddAntiforgery(o =>
             {
                 o.HeaderName = "X-XSRF-TOKEN";
@@ -30,7 +49,7 @@ namespace BlazeBin.Server
 
                 o.Cookie.SecurePolicy = _env.IsProduction() ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest;
             });
-            
+
             services.AddControllers();
             services.AddRazorPages();
             services.AddScoped<IKeyGeneratorService, AlphaKeyGeneratorService>();
@@ -45,17 +64,34 @@ namespace BlazeBin.Server
             services.AddHostedService<FileGroomingWorker>();
             services.AddHostedService<StatsCollectionService>();
 
-            services.Configure<ForwardedHeadersOptions>(options =>
+            if (_config.Hosting.UseForwardedHeaders)
             {
-                options.ForwardedHeaders =ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-                // These three subnets encapsulate the applicable Azure subnets. At the moment, it's not possible to narrow it down further.
-                options.KnownNetworks.Add(new IPNetwork(IPAddress.Parse("::ffff:10.0.0.0"), 104));
-                options.KnownNetworks.Add(new IPNetwork(IPAddress.Parse("::ffff:192.168.0.0"), 112));
-                options.KnownNetworks.Add(new IPNetwork(IPAddress.Parse("::ffff:172.16.0.0"), 108));
-            });
+                services.Configure<ForwardedHeadersOptions>(options =>
+                {
+                    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+                    // These three subnets encapsulate the applicable Azure subnets. At the moment, it's not possible to narrow it down further.
+                    foreach (var network in _config.Hosting.KnownNetworks)
+                    {
+                        options.KnownNetworks.Add(new(IPAddress.Parse(network.Key), network.Value));
+                    }
+                    foreach(var proxy in _config.Hosting.KnownProxies)
+                    {
+                        options.KnownProxies.Add(IPAddress.Parse(proxy));
+                    }
+
+                    if(_config.Hosting.ProtoHeadername != null)
+                    {
+                        options.ForwardedProtoHeaderName = _config.Hosting.ProtoHeadername;
+                    }
+                    if(_config.Hosting.ForwardedForHeaderName != null)
+                    {
+                        options.ForwardedForHeaderName = _config.Hosting.ForwardedForHeaderName;
+                    }
+                });
+            }
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -64,7 +100,10 @@ namespace BlazeBin.Server
             }
             else
             {
-                app.UseForwardedHeaders();
+                if (_config.Hosting.UseForwardedHeaders)
+                {
+                    app.UseForwardedHeaders();
+                }
                 app.UseHttpsRedirection();
                 app.UseHsts();
 

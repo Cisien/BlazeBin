@@ -1,45 +1,43 @@
 ﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace BlazeBin.Server.HealthChecks
+namespace BlazeBin.Server.HealthChecks;
+public class FilesystemWritableCheck : IHealthCheck
 {
-    public class FilesystemWritableCheck : IHealthCheck
+    private readonly ILogger<FilesystemWritableCheck> _logger;
+    private readonly string _basePath;
+
+    public FilesystemWritableCheck(ILogger<FilesystemWritableCheck> logger, BlazeBinConfiguration config)
     {
-        private readonly ILogger<FilesystemWritableCheck> _logger;
-        private readonly string _basePath;
+        _logger = logger;
+        _basePath = config.BaseDirectory;
+    }
 
-        public FilesystemWritableCheck(IConfiguration config, ILogger<FilesystemWritableCheck> logger)
+    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    {
+        var testFilename = Path.Combine(_basePath, "test.txt");
+        try
         {
-            _logger = logger;
-            _basePath = string.IsNullOrWhiteSpace(config["BaseDirectory"]) ? "/app/data" : config["BaseDirectory"];
+            await File.WriteAllTextAsync(testFilename, "test", cancellationToken);
         }
-
-        public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+        catch (Exception ex)
         {
-            var testFilename = Path.Combine(_basePath, "test.txt");
-            try
+            return HealthCheckResult.Unhealthy("Filesystem unwritable", ex);
+        }
+        finally
+        {
+            if (File.Exists(testFilename))
             {
-                await File.WriteAllTextAsync(testFilename, "test", cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                return HealthCheckResult.Unhealthy("Filesystem unwritable", ex);
-            }
-            finally
-            {
-                if (File.Exists(testFilename))
+                try
                 {
-                    try
-                    {
-                        File.Delete(testFilename);
-                    }
-                    catch(Exception ex)
-                    {
-                        _logger.LogError("Unable to clean-up test write file", ex);
-                    }
+                    File.Delete(testFilename);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("Unable to clean-up test write file", ex);
                 }
             }
-
-            return HealthCheckResult.Healthy();
         }
+
+        return HealthCheckResult.Healthy();
     }
 }

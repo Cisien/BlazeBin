@@ -1,24 +1,32 @@
 ﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace BlazeBin.Server.HealthChecks
+namespace BlazeBin.Server.HealthChecks;
+public class FilesystemAvailableCheck : IHealthCheck
 {
-    public class FilesystemAvailableCheck : IHealthCheck
+    private readonly string _basePath;
+    public ILogger<FilesystemAvailableCheck> _logger { get; }
+
+    public FilesystemAvailableCheck(ILogger<FilesystemAvailableCheck> logger, BlazeBinConfiguration config)
     {
-        private readonly string _basePath;
+        _basePath = config.BaseDirectory;
+        _logger = logger;
+    }
 
-        public FilesystemAvailableCheck(IConfiguration config)
+    public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    {
+        try
         {
-            _basePath = string.IsNullOrWhiteSpace(config["BaseDirectory"]) ? "/app/data" : config["BaseDirectory"];
-        }
-
-        public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
-        {
-            if(!Directory.Exists(_basePath))
+            if (!Directory.Exists(_basePath))
             {
                 return Task.FromResult(HealthCheckResult.Unhealthy("Filesystem Unavailable"));
             }
-
-            return Task.FromResult(HealthCheckResult.Healthy());
         }
+        catch(Exception ex)
+        {
+            _logger.LogError(ex, "Filesystem Unavailable");
+            return Task.FromResult(HealthCheckResult.Unhealthy("Filesystem Unavailable", ex));
+        }
+
+        return Task.FromResult(HealthCheckResult.Healthy());
     }
 }

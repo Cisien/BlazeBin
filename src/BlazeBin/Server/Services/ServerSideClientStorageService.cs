@@ -1,8 +1,7 @@
-﻿
-namespace BlazeBin.Server.Services;
+﻿namespace BlazeBin.Server.Services;
 public class ServerSideClientStorageService : Client.Services.IClientStorageService
 {
-    private Dictionary<string, object> _memStorage = new();
+    private readonly Dictionary<string, object> _memStorage = new();
     public Task<List<T>> Get<T>(string key) where T : class
     {
         if(!_memStorage.TryGetValue(key, out var value))
