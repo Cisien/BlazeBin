@@ -57,7 +57,7 @@ namespace BlazeBin.Server
                 app.UseForwardedHeaders(new ForwardedHeadersOptions
                 {
                     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
-                    ForwardedForHeaderName = "X-Forwarded-For"
+                    ForwardedForHeaderName = "X-Forwarded-For",
                     ForwardedProtoHeaderName = "X-Forwarded-Proto"
                 });
                 app.UseHttpsRedirection();
