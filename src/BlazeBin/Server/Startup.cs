@@ -10,6 +10,7 @@ using BlazeBin.Shared.Services;
 
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Rewrite;
 
 namespace BlazeBin.Server
 {
@@ -66,6 +67,15 @@ namespace BlazeBin.Server
             services.AddHostedService<FileGroomingWorker>();
             services.AddHostedService<StatsCollectionService>();
 
+            if (!_env.IsDevelopment())
+            {
+                services.AddHttpsRedirection(o =>
+                {
+                    o.RedirectStatusCode = StatusCodes.Status301MovedPermanently;
+                    o.HttpsPort = 443;
+                });
+            }
+
             if (_config.Hosting.UseForwardedHeaders)
             {
                 services.Configure<ForwardedHeadersOptions>(options =>
@@ -76,16 +86,16 @@ namespace BlazeBin.Server
                     {
                         options.KnownNetworks.Add(new(IPAddress.Parse(network[0]), int.Parse(network[1])));
                     }
-                    foreach(var proxy in _config.Hosting.KnownProxies)
+                    foreach (var proxy in _config.Hosting.KnownProxies)
                     {
                         options.KnownProxies.Add(IPAddress.Parse(proxy));
                     }
 
-                    if(_config.Hosting.ProtoHeadername != null)
+                    if (_config.Hosting.ProtoHeadername != null)
                     {
                         options.ForwardedProtoHeaderName = _config.Hosting.ProtoHeadername;
                     }
-                    if(_config.Hosting.ForwardedForHeaderName != null)
+                    if (_config.Hosting.ForwardedForHeaderName != null)
                     {
                         options.ForwardedForHeaderName = _config.Hosting.ForwardedForHeaderName;
                     }
@@ -97,6 +107,13 @@ namespace BlazeBin.Server
         {
             app.UseHealthChecks("/health");
             app.UseHealthChecks("/robots933456.txt");
+
+            if (_config.Hosting.RedirecFromWww)
+            {
+                var rewriteOpts = new RewriteOptions()
+                    .AddRedirectToNonWwwPermanent();
+                app.UseRewriter(rewriteOpts);
+            }
 
             if (env.IsDevelopment())
             {

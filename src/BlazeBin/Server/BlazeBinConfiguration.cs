@@ -18,6 +18,7 @@ public class BlazeBinHosting
     public List<string> KnownProxies { get; private set; } = new();
     public string? ProtoHeadername { get; private set; }
     public string? ForwardedForHeaderName { get; private set; }
+    public bool RedirecFromWww { get; private set; } = false;
 }
 
 public class BlazeBinDataProtection
