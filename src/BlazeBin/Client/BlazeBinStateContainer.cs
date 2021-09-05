@@ -26,6 +26,8 @@ public class BlazeBinStateContainer
     public List<string> Favorites { get; private set; }
     public List<FileBundle> Uploads { get; private set; }
 
+    public BlazeBinClient ClientConfig { get; private set; } = new();
+
     public FileBundle? _adHocBundle;
     public int _activeUploadIndex = -1;
     public int _activeFileIndex = -1;
@@ -88,6 +90,11 @@ public class BlazeBinStateContainer
     public void StoreAntiforgeryToken(string? token)
     {
         _uploadSvc.SetAntiforgeryToken(token);
+    }
+
+    public void SetClientConfig(BlazeBinClient clientConfig)
+    {
+        ClientConfig = clientConfig;
     }
 
     public async Task InitializeUploadLists()

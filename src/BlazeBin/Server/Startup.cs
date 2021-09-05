@@ -6,6 +6,7 @@ using Azure.Identity;
 using BlazeBin.Client.Services;
 using BlazeBin.Server.HealthChecks;
 using BlazeBin.Server.Services;
+using BlazeBin.Shared;
 using BlazeBin.Shared.Services;
 
 using Microsoft.AspNetCore.DataProtection;

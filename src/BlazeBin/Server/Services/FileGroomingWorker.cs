@@ -1,4 +1,6 @@
-﻿namespace BlazeBin.Server.Services;
+﻿using BlazeBin.Shared;
+
+namespace BlazeBin.Server.Services;
 public class FileGroomingWorker : IHostedService
 {
     private readonly IServiceProvider _serviceProvider;

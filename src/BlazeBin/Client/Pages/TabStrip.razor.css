@@ -1,15 +1,22 @@
 ﻿
 .tabstrip {
-    flex-wrap: wrap;
-    display: flex;
     height: 35px;
+    overflow-y: auto;
+    overflow-x: auto;
+    white-space: nowrap;
+    max-width: calc(100vw - 200px);
 }
 
+    .tabstrip::-webkit-scrollbar {
+        display: none;
+    }
+
 .new-tab {
-    font-size: 2.8rem;
+    display: inline-block;
+    font-size: 2rem;
     cursor: pointer;
-    line-height: 3rem;
     padding: 1px 9px;
+    vertical-align: middle;
 }
 
     .new-tab:hover {
@@ -21,11 +28,11 @@
     }
 
 .tab {
-    flex: 0 0 auto;
-    min-width: 200px;
+    display: inline-block;
+    width: 200px;
     border-right: 1px solid rgb(37, 37, 38);
     background-color: rgb(45, 45, 45);
-    line-height: 35px;
+    line-height: 32px;
     padding-left: 5px;
     color: rgb(255, 255, 255, 0.5);
     height: 100%;
@@ -37,7 +44,6 @@
     }
 
 .close-tab-button {
-    flex: 0 0 25px;
     line-height: 25px;
     padding: 0 8px;
     margin-top: 5px;
@@ -94,14 +100,49 @@ input[type="radio"] {
         cursor: pointer;
     }
 
-
 input[type="text"] {
     background-color: lightgray;
     color: black;
     border: 1px solid rgb(30, 30, 30);
     padding: 2px;
+    width: calc(100% - 30px);
+    height: 100%;
 }
 
     input[type="text"]:focus {
         outline: none;
     }
+
+.new-tab-input-container > .close-tab-button {
+    display: inline-block;
+}
+
+
+
+
+@media screen and (max-width: 780px) {
+    .tabstrip {
+        max-width: calc(100vw - 130px);
+    }
+
+    .tab {
+        width: 130px;
+    }
+
+    .tab-name {
+        display: inline;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    input[type="text"] {
+        width: 100px;
+    }
+
+    .close-tab-button {
+        border-radius: 3px;
+        line-height: 23px;
+        padding: 0 7px;
+        display: initial;
+    }
+}

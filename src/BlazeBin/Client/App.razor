@@ -29,6 +29,12 @@
         {
             await state.Dispatch(() => state.StoreAntiforgeryToken(afToken));
         }
+
+        if(appState.TryTakeAsJson<BlazeBinClient>("client-config", out var clientConfig) && clientConfig != null)
+        {
+            await state.Dispatch(() => state.SetClientConfig(clientConfig));
+        }
+
         await base.SetParametersAsync(parameters);
     }
 

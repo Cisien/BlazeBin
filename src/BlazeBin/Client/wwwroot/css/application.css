@@ -16,15 +16,14 @@ html, body {
     color: #d4d4d4;
 }
 
-body {
+body, main {
     font-size:1.3rem;
     height: 100vh;
 }
 
 .container {
     display: flex;
-    height: 100vh;
-    padding-bottom:61px; /* this feels like a hack to keep the content from overflowing the viewport*/
+    min-height: calc(100vh - 25px);
 }
 
 .loading {
@@ -51,4 +50,8 @@ i.icon-lang-cs::before {
 
 .blur > * {
     filter: blur(2px);
+}
+
+@media screen and (max-width: 780px) {
+
 }

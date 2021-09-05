@@ -1,5 +1,8 @@
 ﻿
+using BlazeBin.Shared;
+
 using Microsoft.ApplicationInsights;
+
 using System.Diagnostics;
 
 namespace BlazeBin.Server.Services;
@@ -32,7 +35,7 @@ public class StatsCollectionService : IHostedService
         try
         {
             var collectionTimer = Stopwatch.StartNew();
-        
+
             await using var scope = _provider.CreateAsyncScope();
             var telemetryClient = scope.ServiceProvider.GetService<TelemetryClient>();
 
@@ -51,7 +54,7 @@ public class StatsCollectionService : IHostedService
 
             foreach (var entry in entries)
             {
-                if(ctsToken.IsCancellationRequested)
+                if (ctsToken.IsCancellationRequested)
                 {
                     return;
                 }
@@ -86,14 +89,14 @@ public class StatsCollectionService : IHostedService
                 _logger.LogInformation("stats-collection-time: {collectionTime}", collectionTimer.Elapsed.TotalSeconds);
             }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             _logger.LogError("Exception while collecting statistics", ex);
         }
     }
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        if(!_config.Stats.Enabled)
+        if (!_config.Stats.Enabled)
         {
             return Task.CompletedTask;
         }

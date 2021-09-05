@@ -1,18 +1,25 @@
 ﻿@page "/{*path:nonfile}"
+@using BlazeBin.Shared
 @using BlazeBin.Client
 @using Microsoft.AspNetCore.Antiforgery
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @inject IConfiguration config
+@inject BlazeBinConfiguration appConfig
 @inject ComponentApplicationState appState
+@inject BlazeBinStateContainer state
 @inject IAntiforgery af
+
+@{
+    await state.Dispatch(() => state.SetClientConfig(appConfig.Client));
+}
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
     <meta name="description" content="A tool for sharing your source code with the world!" />
     <base href="~/" />
     @*
@@ -68,6 +75,7 @@
         var requestToken = tokens.RequestToken;
 
         appState.PersistAsJson("af-token", requestToken);
+        appState.PersistAsJson("client-config", appConfig.Client);
     }
     <persist-component-state />
 </body>

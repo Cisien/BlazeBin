@@ -3,7 +3,7 @@
 }
 
     .row.body {
-        height: 100%;
+        height: calc(100% - 35px);
     }
 
     .row.header {
@@ -17,4 +17,11 @@
 
 .col-fill {
     flex: 1 1 100%;
+}
+
+@media screen and (max-width: 780px) {
+
+    .col-left {
+        flex: 0 0 150px;
+    }
 }

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using BlazeBin.Shared;
 
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 

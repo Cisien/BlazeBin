@@ -20,15 +20,15 @@
 
     @if (_newFilename != null)
     {
-        <div class="tab">
-            <span class="close-tab-button" @onclick="@(e => { _newFilename = null; })" @onclick:preventDefault title="Cancel">X</span>
+        <div class="tab new-tab-input-container">
+            <span class="close-tab-button" @onclick="@(e => { _newFilename = null; })" @onclick:preventDefault title="Cancel"><i class="fa fa-window-close" aria-hidden="true"></i></span>
             <input autofocus type="text" @bind="_newFilename" @bind:event="oninput" @onkeypress="CreateNewFile"
                id="new-file" placeholder="newfile.cs" />
         </div>
     }
 
-    @if (State!.ActiveUpload != null && State!.ActiveUpload.Files.Count < 6)
+    @if (State!.ActiveUpload != null && State!.ActiveUpload.Files.Count < 6 && _newFilename == null)
     {
-        <div class="new-tab" @onclick="@CreateTab" @onclick:preventDefault title="Add File">+</div>
+        <div class="new-tab" @onclick="@CreateTab" @onclick:preventDefault title="Add File"><i class="fa fa-plus-square-o"></i></div>
     }
 </div>

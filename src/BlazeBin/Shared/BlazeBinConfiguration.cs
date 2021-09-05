@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
-namespace BlazeBin.Server;
+namespace BlazeBin.Shared;
 public class BlazeBinConfiguration
 {
     public string BaseDirectory { get; private set; } = "/app/data";
@@ -9,6 +10,7 @@ public class BlazeBinConfiguration
     public BlazeBinGrooming Grooming { get; } = new();
     public BlazeBinHosting Hosting { get; } = new();
     public BlazeBinStats Stats { get; } = new();
+    public BlazeBinClient Client { get; } = new();
 }
 
 public class BlazeBinHosting
@@ -43,4 +45,11 @@ public class BlazeBinStats
     public TimeSpan CollectionInterval { get; private set; } = TimeSpan.FromMinutes(1);
     public bool LogToMSEL { get; private set; } = false;
     public bool LogToAppInsights { get; private set; } = false;
+}
+
+public class BlazeBinClient
+{
+    public string? AcceptableUsePolicyUrl { get; set; }
+    public string? PrivacyPolicyUrl { get; set; }
+    public string? GeneralPolicyUrl { get; set; }
 }

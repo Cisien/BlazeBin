@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+﻿using BlazeBin.Shared;
+
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace BlazeBin.Server.HealthChecks;
 public class FilesystemAvailableCheck : IHealthCheck

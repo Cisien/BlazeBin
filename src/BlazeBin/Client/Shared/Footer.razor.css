@@ -12,8 +12,34 @@
     padding-top: 3px;
 }
 
-    footer span {
+    .banner span {
         font-family: monospace;
         font-style: italic;
         padding-left: 5px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        word-wrap: break-word;
+
     }
+    .banner {
+        display:inline-block;
+    }
+
+.policy-container {
+    display: inline-block;
+    float: right;
+    flex: 1;
+}
+
+.policy-container > a {
+    padding-right: 5px;
+    padding-left: 5px;
+
+    color: black;
+}
+
+@media screen and (max-width: 780px) {
+    .banner {
+        display: none;
+    }
+}

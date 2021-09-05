@@ -1,5 +1,23 @@
-﻿<footer>
+﻿@inject BlazeBinStateContainer state
+<footer>
     <div class="banner">
         ⚠️<span>Notice: Content posted here will be deleted after 30 days!</span>
+
+    </div>
+    <div class="policy-container">
+        @if (state.ClientConfig.AcceptableUsePolicyUrl != null)
+        {
+            <a href="@state.ClientConfig.AcceptableUsePolicyUrl">Acceptable Use Policy</a>
+        }
+
+        @if (state.ClientConfig.PrivacyPolicyUrl != null)
+        {
+            <a href="@state.ClientConfig.PrivacyPolicyUrl">Privacy Policy</a>
+        }
+
+        @if (state.ClientConfig.GeneralPolicyUrl != null)
+        {
+            <a href="@state.ClientConfig.GeneralPolicyUrl" title="View all policy documents on GitHub"><i class="fa fa-external-link" aria-hidden="true"></i></a>
+        }
     </div>
 </footer>
