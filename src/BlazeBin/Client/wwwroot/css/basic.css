@@ -1,0 +1,85 @@
+﻿.editor {
+    width: 100vw;
+    height: calc(100vh - 105px);
+    background-color: rgb(30, 30, 30);
+    color: #d4d4d4;
+}
+
+button {
+    padding: 10px;
+}
+
+.reader {
+    width: 100vw;
+    height: calc(100vh - 92px);
+    background-color: rgb(30, 30, 30);
+    color: #d4d4d4;
+    overflow: auto;
+}
+
+footer {
+    background: rgba(255, 255, 203, 0.8);
+    color: #000;
+    line-height: 1.5;
+    font-family: monospace;
+    padding-left: 10px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 25px;
+    padding-top: 3px;
+}
+
+    footer .banner span {
+        font-family: monospace;
+        font-style: italic;
+        padding-left: 5px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        word-wrap: break-word;
+    }
+
+    footer .banner {
+        display: inline-block;
+    }
+
+    footer .policy-container {
+        display: inline-block;
+        float: right;
+        flex: 1;
+    }
+
+        footer .policy-container > a {
+            padding-right: 5px;
+            padding-left: 5px;
+            color: black;
+        }
+
+.file-list > li {
+    display: inline-block;
+    padding: 5px;
+    border: 1px solid black;
+    margin: 0;
+    min-width: 150px;
+    background-color: rgb(30, 30, 30);
+    color: #000;
+}
+
+    .file-list > li.selected {
+        background-color: black;
+    }
+
+.file-list a {
+    color: #d4d4d4;
+}
+
+.file-list li.selected a {
+    color: white !important;
+}
+
+@media screen and (max-width: 780px) {
+    footer .banner {
+        display: none;
+    }
+}

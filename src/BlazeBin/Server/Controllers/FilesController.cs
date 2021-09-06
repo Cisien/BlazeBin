@@ -39,7 +39,6 @@ public class FilesController : ControllerBase
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> PostData(IFormFile file)
     {
-        // buffers the contents in memory, but the RequestFormLimitsAttribute is caping that at 4mb
         string? submitData = await GetUtf8Contents(file);
 
         if (string.IsNullOrWhiteSpace(submitData))
@@ -51,7 +50,24 @@ public class FilesController : ControllerBase
         return Created(location, result);
     }
 
-   
+    [HttpPost("submit/basic")]
+    [RequestFormLimits(MultipartBodyLengthLimit = 409_600)]
+    [RequestSizeLimit(409_600)]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BasicSubmit([FromForm]string file)
+    {
+        var bundleId = _keygen.GenerateKey(12).ToString();
+        var fileId = _keygen.GenerateKey(12).ToString();
+        FileBundle bundle = new(bundleId, new List<FileData>());
+        bundle.Files.Add(new(fileId, "basic-post", file));
+
+        var serialized = JsonSerializer.Serialize(bundle, new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+        var (_, data) = await WriteData("hastebin-post", serialized);
+
+        var getUrl = new UriBuilder(Request.Scheme, Request.Host.Host, Request.Host.Port.GetValueOrDefault(Request.IsHttps ? 443 : 80), $"basic/viewer/{data.Id}/0").Uri.ToString();
+
+        return Redirect(getUrl);
+    }
 
     [HttpGet("raw/{filename}")]
     [ResponseCache(Location = ResponseCacheLocation.Any, Duration = 2_592_000 /*30 days*/)]

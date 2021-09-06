@@ -1,0 +1,18 @@
+﻿@page "/basic/viewer/{serverId:nonfile}/{*fileIndex:nonfile}"
+@model BlazeBin.Server.Pages.ViewerModel
+@using BlazeBin.Client.Services
+@using BlazeBin.Shared
+@{
+    ViewData["Title"] = Model.ServerId;
+}
+
+<main id="app" class="basic">
+    <h1>BlazeBin Basic</h1>
+    <ul class="file-list">
+        @for (var i = 0; i < Model.Bundle.Files.Count; i++)
+        {
+            <li class="@(i == Model.FileIndex ? " selected" : "")"><a href="/basic/viewer/@Model.ServerId/@i">@Model.Bundle.Files[i].Filename</a></li>
+        }
+    </ul>
+    <pre class="reader">@Model.Bundle.Files[Model.FileIndex].Data</pre>
+</main>

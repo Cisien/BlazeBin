@@ -13,11 +13,12 @@
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="6.0.0-preview.7.21378.6" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0-preview.7.21377.19" />
 		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="6.0.0-preview.7.21378.6" />
+		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.0-preview.7.21413.1" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Client\BlazeBin.Client.csproj" Watch="true" />
-		<ProjectReference Include="..\Shared\BlazeBin.Shared.csproj" Watch="true"/>
+		<ProjectReference Include="..\Shared\BlazeBin.Shared.csproj" Watch="true" />
 	</ItemGroup>
 
 </Project>

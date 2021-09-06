@@ -1,0 +1,14 @@
+﻿@page "/basic"
+@model BlazeBin.Server.Pages.EditorModel
+@using BlazeBin.Client.Services
+@using BlazeBin.Shared
+@inject IUploadService upload
+
+<main id="app" class="basic">
+    <h1>BlazeBin Basic</h1>
+    <form enctype="multipart/form-data" method="post" action="~/submit/basic" asp-antiforgery="true">
+
+        <textarea name="file" class="editor"></textarea>
+        <button type="submit">Submit</button>
+    </form>
+</main>
