@@ -118,9 +118,7 @@ public class FilesController : ControllerBase
         var serialized = JsonSerializer.Serialize(bundle, new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
         var (_, data) = await WriteData("hastebin-post", serialized);
 
-        var location = new Uri(string.Format(_config.HasteShim.ResultUrlPattern, Request.Scheme, Request.Host, data.Id));
-
-        return Ok(new { Key = location });
+        return Ok(new { Key = data.Id });
     }
 
     private async Task<(Uri location, FileData result)> WriteData(string filename, string submitData)

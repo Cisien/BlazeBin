@@ -57,6 +57,5 @@ public class BlazeBinClient
 public class BlazeBinHastebinShim
 {
     public List<string> AllowedClientIps { get; private set; } = new();
-    public string ResultUrlPattern { get; private set; } = "{0}://{1}/{2}";
     public bool Enabled { get; private set; } = false;
 }
