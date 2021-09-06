@@ -1,4 +1,6 @@
 ﻿using Microsoft.JSInterop;
+
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace BlazeBin.Client.Services;
@@ -9,10 +11,15 @@ public class ClientSideLocalStorageService : IClientStorageService
     private const string LocalStorageSetItem = "window.localStorage.setItem";
 
     private readonly IJSRuntime _js;
+    private readonly JsonSerializerOptions _serializerOpts;
 
     public ClientSideLocalStorageService(IJSRuntime js)
     {
         _js = js;
+        _serializerOpts = new JsonSerializerOptions
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
     }
 
     public async Task<List<T>> Get<T>(string key) where T : class
@@ -48,7 +55,7 @@ public class ClientSideLocalStorageService : IClientStorageService
 
     public async Task Set<T>(string key, T item) where T: class
     {
-        var storageItem = JsonSerializer.Serialize(item);
+        var storageItem = JsonSerializer.Serialize(item, _serializerOpts);
         await _js.InvokeVoidAsync(LocalStorageSetItem, key, storageItem);
     }
 

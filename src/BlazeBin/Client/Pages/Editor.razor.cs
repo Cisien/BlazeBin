@@ -1,4 +1,6 @@
-﻿using BlazeBin.Shared;
+﻿using System.Text.Json;
+
+using BlazeBin.Shared;
 using BlazeBin.Shared.Extensions;
 using BlazorMonaco;
 using Microsoft.AspNetCore.Components;
@@ -12,6 +14,8 @@ public partial class Editor : IAsyncDisposable
     private const string ModelUriFormat = "https://bin.mod.gg/{0}/{1}";
     private MonacoEditor? _editor;
     private bool _hasMarkedDirty = false;
+    private int _largestOffsetSeen = 0;
+    private bool _lengthWarningShown = false;
 
     public async Task EditorInitialized(MonacoEditorBase editor)
     {
@@ -32,6 +36,11 @@ public partial class Editor : IAsyncDisposable
 
     private async Task ModelContentChanged(ModelContentChangedEvent changed)
     {
+        if(changed.Changes.Count == 0)
+        {
+            return;
+        }
+
         if (!_hasMarkedDirty)
         {
             await State!.Dispatch(() => State!.SetActiveUploadDirty());
@@ -64,6 +73,8 @@ public partial class Editor : IAsyncDisposable
 
         await State!.Dispatch(() => State!.UpdateFile(fileId, data));
         _hasMarkedDirty = false;
+        _largestOffsetSeen = 0;
+        _lengthWarningShown = false;
     }
 
     private async Task EditorTextBlur(MonacoEditor editor)
@@ -93,7 +104,7 @@ public partial class Editor : IAsyncDisposable
         // dispose models that aren't used anymore
         foreach (var model in models)
         {
-            if (!DataExistsForModel(model))
+            if (!DataExistsForModel(model) && !await model.IsDisposed())
             {
                 await model.DisposeModel();
             }

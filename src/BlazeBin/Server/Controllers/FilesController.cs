@@ -28,7 +28,8 @@ public class FilesController : ControllerBase
     }
 
     [HttpPost("submit")]
-    [RequestFormLimits(MultipartBodyLengthLimit = 409_600_000)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 409_600)]
+    [RequestSizeLimit(409_600)]
     [ValidateAntiForgeryToken]
     public async Task<ActionResult> PostData(IFormFile file)
     {

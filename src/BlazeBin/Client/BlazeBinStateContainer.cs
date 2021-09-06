@@ -1,7 +1,10 @@
 ﻿using BlazeBin.Client.Services;
 using BlazeBin.Shared;
 using BlazeBin.Shared.Services;
+
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
+
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
@@ -71,6 +74,8 @@ public class BlazeBinStateContainer
     }
 
     public Error? Error { get; private set; }
+
+    [MemberNotNullWhen(true, nameof(Error))]
     public bool DisplayError { get; private set; }
 
     public event Func<Task>? OnChange;
@@ -233,6 +238,12 @@ public class BlazeBinStateContainer
 
         if (ActiveUpload.LastServerId != null)
         {
+            return;
+        }
+
+        if (ActiveUpload.Files.SelectMany(a => a.Data).Count() > 390_000)
+        {
+            ShowError("File length limit exceeded", "The number characters contained in the files in this set is larger than what the server will accept.\nReduce the size of the files or split this into multiple sets.");
             return;
         }
 
@@ -492,7 +503,15 @@ public class BlazeBinStateContainer
             ShowError("Unhandled Exception", ex.ToString());
         }
         _logger.LogInformation("State change call initiated from {method} {filePath}: {lineNumber}. {dispatchedMethod}", method, filePath, lineNumber, work.Body);
-        _logger.LogInformation("State: {state}", JsonSerializer.Serialize(this, new JsonSerializerOptions { IncludeFields = true, WriteIndented = true, IgnoreReadOnlyFields = false }));
+
+        if (Uploads.SelectMany(a => a.Files).SelectMany(a => a.Data).Count() + (_adHocBundle?.Files.SelectMany(a => a.Data).Count() ?? 0) > 2000)
+        {
+            _logger.LogInformation("State: <too large to serialize>");
+        }
+        else
+        {
+            _logger.LogInformation("State: {state}", JsonSerializer.Serialize(this, new JsonSerializerOptions { IncludeFields = true, WriteIndented = true, IgnoreReadOnlyFields = false }));
+        }
 
         await StateHasChanged();
     }
@@ -523,7 +542,15 @@ public class BlazeBinStateContainer
             ShowError("Unhandled Exception", ex.ToString());
         }
         _logger.LogInformation("State change call initiated from {method} {filePath}: {lineNumber}. {dispatchedMethod}", method, filePath, lineNumber, work.Body);
-        _logger.LogInformation("State: {state}", JsonSerializer.Serialize(this, new JsonSerializerOptions { IncludeFields = true, WriteIndented = true, IgnoreReadOnlyFields = false }));
+
+        if (Uploads.SelectMany(a => a.Files).SelectMany(a => a.Data).Count() + (_adHocBundle?.Files.SelectMany(a => a.Data).Count() ?? 0) > 2000)
+        {
+            _logger.LogInformation("State: <too large to serialize>");
+        }
+        else
+        {
+            _logger.LogInformation("State: {state}", JsonSerializer.Serialize(this, new JsonSerializerOptions { IncludeFields = true, WriteIndented = true, IgnoreReadOnlyFields = false }));
+        }
 
         await StateHasChanged();
     }

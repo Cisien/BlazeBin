@@ -4,7 +4,10 @@
             <span>@State!.Error?.Title</span>
         </div>
         <div class="body">
-            @State!.Error?.Text
+            @foreach (var line in State!.Error?.Text.Split(new[] { "\r", "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0])
+            {
+                @line<br />
+            }
         </div>
         <div class="buttons">
             <div>
