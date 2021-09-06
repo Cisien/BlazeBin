@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Serialization;
 
 namespace BlazeBin.Shared;
 public class BlazeBinConfiguration
@@ -11,6 +10,7 @@ public class BlazeBinConfiguration
     public BlazeBinHosting Hosting { get; } = new();
     public BlazeBinStats Stats { get; } = new();
     public BlazeBinClient Client { get; } = new();
+    public BlazeBinHastebinShim HasteShim { get; } = new();
 }
 
 public class BlazeBinHosting
@@ -52,4 +52,11 @@ public class BlazeBinClient
     public string? AcceptableUsePolicyUrl { get; set; }
     public string? PrivacyPolicyUrl { get; set; }
     public string? GeneralPolicyUrl { get; set; }
+}
+
+public class BlazeBinHastebinShim
+{
+    public List<string> AllowedClientIps { get; private set; } = new();
+    public string ResultUrlPattern { get; private set; } = "{0}://{1}/{2}";
+    public bool Enabled { get; private set; } = false;
 }

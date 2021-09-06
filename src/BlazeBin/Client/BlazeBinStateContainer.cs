@@ -3,7 +3,6 @@ using BlazeBin.Shared;
 using BlazeBin.Shared.Services;
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Logging;
 
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;

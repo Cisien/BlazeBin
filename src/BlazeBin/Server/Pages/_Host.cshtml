@@ -10,7 +10,6 @@
 @inject ComponentApplicationState appState
 @inject BlazeBinStateContainer state
 @inject IAntiforgery af
-
 @{
     await state.Dispatch(() => state.SetClientConfig(appConfig.Client));
 }
@@ -48,7 +47,8 @@
     <link rel="stylesheet" type="text/css" href="css/application.css" asp-append-version="true" />
 
     <link href="BlazeBin.Client.styles.css" rel="stylesheet" asp-append-version="true" />
-    <link href="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.css" rel="stylesheet" asp-append-version="true"/>
+    <link href="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.css" rel="stylesheet" asp-append-version="true" />
+    
     <component type="typeof(HeadOutlet)" render-mode="WebAssemblyPrerendered" />
 
 </head>

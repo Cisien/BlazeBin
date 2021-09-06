@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 using System.Buffers;
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 
 namespace BlazeBin.Server.Controllers;
 
@@ -17,21 +19,25 @@ public class FilesController : ControllerBase
     private readonly IStorageService _fileService;
     private readonly IKeyGeneratorService _keygen;
     private readonly UTF8Encoding _encoder;
+    private readonly BlazeBinConfiguration _config;
+
     private static readonly string _getRouteTemplate;
 
-    public FilesController(ILogger<FilesController> logger, IStorageService fileService, IKeyGeneratorService keygen)
+    public FilesController(ILogger<FilesController> logger, IStorageService fileService, IKeyGeneratorService keygen, BlazeBinConfiguration config)
     {
         _logger = logger;
         _fileService = fileService;
         _keygen = keygen;
         _encoder = new UTF8Encoding(false, true);
+        _config = config;
+
     }
 
     [HttpPost("submit")]
     [RequestFormLimits(MultipartBodyLengthLimit = 409_600)]
     [RequestSizeLimit(409_600)]
     [ValidateAntiForgeryToken]
-    public async Task<ActionResult> PostData(IFormFile file)
+    public async Task<IActionResult> PostData(IFormFile file)
     {
         // buffers the contents in memory, but the RequestFormLimitsAttribute is caping that at 4mb
         string? submitData = await GetUtf8Contents(file);
@@ -41,18 +47,16 @@ public class FilesController : ControllerBase
             return BadRequest(new { Error = "The file contained byte sequences that are not valid Utf-8." });
         }
 
-        var key = _keygen.GenerateKey(12).ToString();
-        var data = new FileData(key, file.FileName, submitData);
-        data = await _fileService.WriteDataAsync(data);
-
-        var filePath = BuildGetUriFromAction(data);
-        return Created(filePath, data);
+        var (location, result) = await WriteData(file.FileName, submitData);
+        return Created(location, result);
     }
+
+   
 
     [HttpGet("raw/{filename}")]
     [ResponseCache(Location = ResponseCacheLocation.Any, Duration = 2_592_000 /*30 days*/)]
     [ValidateAntiForgeryToken]
-    public async Task<ActionResult> GetFileAsync(string filename)
+    public async Task<IActionResult> GetFileAsync(string filename)
     {
         var data = await _fileService.ReadDataAsync(filename);
 
@@ -61,14 +65,78 @@ public class FilesController : ControllerBase
             return NotFound();
         }
 
-        Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{data.Filename}\"");
+        Response.Headers.ContentDisposition = $"attachment; filename=\"{data.Filename}\"";
         return Content(data.Data, "application/json", Encoding.UTF8);
+    }
+
+    // to maintain compatibility with the hastebin api in use on paste.mod.gg
+    [HttpPost("documents")]
+    [RequestSizeLimit(400_000)]
+    [Consumes("text/plain")]
+    public async Task<IActionResult>HastebinFilePost()
+    {
+        if(!_config.HasteShim.Enabled)
+        {
+            return BadRequest(new { Error = "This feature is disabled" });
+        }
+
+        string? callerIp;
+        if (HttpContext.Connection.RemoteIpAddress != null)
+        {
+            callerIp = HttpContext.Connection.RemoteIpAddress.ToString();
+        }
+        else if (!Request.Headers.ContainsKey("client-ip"))
+        {
+            callerIp = Request.Headers["client-ip"];
+        }
+        else
+        {
+            _logger.LogWarning("Unable to determine the caller ip for hastebin shim request");
+            return BadRequest();
+        }
+
+        if (!_config.HasteShim.AllowedClientIps.Contains(callerIp))
+        {
+            _logger.LogWarning("{ip} is not in the allowed list of ip addresses for hastebin shim request", callerIp);
+            return BadRequest();
+        }
+
+        var bodyResult = await Request.BodyReader.ReadAsync();
+        if(bodyResult.Buffer.Length == 0)
+        {
+            _logger.LogWarning("body empty for hastebin shim request");
+            return BadRequest();
+        }
+        
+        var body = _encoder.GetString(bodyResult.Buffer);
+        
+        var bundleId = _keygen.GenerateKey(12).ToString();
+        var fileId = _keygen.GenerateKey(12).ToString();
+        FileBundle bundle = new(bundleId, new List<FileData>());
+        bundle.Files.Add(new(fileId, "hastebin-post", body));
+
+        var serialized = JsonSerializer.Serialize(bundle, new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+        var (_, data) = await WriteData("hastebin-post", serialized);
+
+        var location = new Uri(string.Format(_config.HasteShim.ResultUrlPattern, Request.Scheme, Request.Host, data.Id));
+
+        return Ok(new { Key = location });
+    }
+
+    private async Task<(Uri location, FileData result)> WriteData(string filename, string submitData)
+    {
+        var key = _keygen.GenerateKey(12).ToString();
+        var data = new FileData(key, filename, submitData);
+        data = await _fileService.WriteDataAsync(data);
+
+        var filePath = BuildGetUriFromAction(data);
+        return (filePath, data);
     }
 
     private Uri BuildGetUriFromAction(FileData data)
     {
         var template = _getRouteTemplate.Replace("{filename}", data.Id);
-        var getUrl = new UriBuilder(Request.Scheme, Request.Host.Host, Request.Host.Port.GetValueOrDefault(Request.Scheme == "https" ? 443 : 80), template);
+        var getUrl = new UriBuilder(Request.Scheme, Request.Host.Host, Request.Host.Port.GetValueOrDefault(Request.IsHttps ? 443 : 80), template);
 
         return getUrl.Uri;
     }
