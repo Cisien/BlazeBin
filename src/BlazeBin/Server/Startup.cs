@@ -147,11 +147,6 @@ namespace BlazeBin.Server
 
             app.Use((context, next) =>
             {
-                if (context.Response.HasStarted)
-                {
-                    return next();
-                }
-
                 context.Response.Headers.TryAdd("X-Frame-Options", "deny");
                 context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
                 context.Response.Headers.TryAdd("X-Permitted-Cross-Domain-Policies", "none");
