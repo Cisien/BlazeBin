@@ -50,6 +50,7 @@ public class FilesController : ControllerBase
     }
 
     [HttpGet("raw/{filename}")]
+    [ResponseCache(Location = ResponseCacheLocation.Any, Duration = 2_592_000 /*30 days*/)]
     [ValidateAntiForgeryToken]
     public async Task<ActionResult> GetFileAsync(string filename)
     {
