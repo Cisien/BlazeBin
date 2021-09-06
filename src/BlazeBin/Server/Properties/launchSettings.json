@@ -6,7 +6,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "http://+:5000"
+      "applicationUrl": "http://0.0.0.0:5000"
     },
     "BlazeBin-Browser": {
       "commandName": "Project",
@@ -15,7 +15,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "http://+:5000",
+      "applicationUrl": "http://0.0.0.0:5000"
       //"hotReloadProfile": "aspnetcore",
       //"inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/_framework/debug/ws-proxy?browser={browserInspectUri}"
     }

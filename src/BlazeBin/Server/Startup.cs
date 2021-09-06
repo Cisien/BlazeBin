@@ -12,6 +12,7 @@ using BlazeBin.Shared.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Rewrite;
+using Microsoft.Net.Http.Headers;
 
 namespace BlazeBin.Server
 {
@@ -131,6 +132,18 @@ namespace BlazeBin.Server
                 app.UseHttpsRedirection();
                 app.UseHsts();
 
+                app.Use((context, next) =>
+                {
+                    context.Response.Headers.TryAdd("X-Frame-Options", "deny");
+                    context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
+                    context.Response.Headers.TryAdd("X-Permitted-Cross-Domain-Policies", "none");
+                    context.Response.Headers.TryAdd("Referrer-Policy", "same-origin");
+                    context.Response.Headers.TryAdd("Cross-Origin-Embedder-Policy", "require-corp");
+                    context.Response.Headers.TryAdd("Cross-Origin-Opener-Policy", "same-origin");
+                    context.Response.Headers.TryAdd("Cross-Origin-Resource-Policy", "same-origin");
+                    return next();
+                });
+
                 app.UseExceptionHandler(new ExceptionHandlerOptions
                 {
                     AllowStatusCode404Response = false,
@@ -145,20 +158,25 @@ namespace BlazeBin.Server
                 });
             }
 
-            app.Use((context, next) =>
-            {
-                context.Response.Headers.TryAdd("X-Frame-Options", "deny");
-                context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
-                context.Response.Headers.TryAdd("X-Permitted-Cross-Domain-Policies", "none");
-                context.Response.Headers.TryAdd("Referrer-Policy", "same-origin");
-                context.Response.Headers.TryAdd("Cross-Origin-Embedder-Policy", "require-corp");
-                context.Response.Headers.TryAdd("Cross-Origin-Opener-Policy", "same-origin");
-                context.Response.Headers.TryAdd("Cross-Origin-Resource-Policy", "same-origin");
-                return next();
-            });
-
             app.UseBlazorFrameworkFiles();
-            app.UseStaticFiles();
+            if (_env.IsDevelopment())
+            {
+                app.UseStaticFiles();
+            }
+            else
+            {
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    OnPrepareResponse = ctx => {
+                        ctx.Context.Response.GetTypedHeaders().CacheControl = new CacheControlHeaderValue
+                        {
+                            MaxAge = TimeSpan.FromDays(1),
+                            Public = true
+                        };
+                    }
+                });
+            }
+            
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
