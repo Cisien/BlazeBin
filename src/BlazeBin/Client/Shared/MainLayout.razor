@@ -8,11 +8,20 @@
 {
     <div class="loading-modal">
             <div class="loader"></div>
+            <div class="basic-link-container shown">
+                <span>Too slow?</span><br /><span>Try the <a href="@(uploadName == null ? "/basic" : $"/basic/viewer/{uploadName}/0")">basic</a> version of BlazeBin</span>
+            </div>
     </div>
 }
 
 @code {
     bool clientSideRendered = false;
+    string? uploadName;
+
+    protected override void OnInitialized()
+    {
+        uploadName = (this.Body?.Target as RouteView)?.RouteData.RouteValues["uploadName"].ToString();
+    }
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -21,6 +30,7 @@
             clientSideRendered = true;
             StateHasChanged();
         }
+
         base.OnAfterRender(firstRender);
     }
 }
