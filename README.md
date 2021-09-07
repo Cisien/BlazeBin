@@ -63,7 +63,7 @@ For self-hosting:
 The best and easiest way to host BlazeBin yourself is to run the docker container. This container does not handle SSL, so you will want to front it with nginx either in another container, or as a standalone server.
 
 Command line:
-Note: as an alternative to mounting the appsettings.json file, you can provide a .env file with your setting overrides. the env var name will be of the format `BLAZEBIN_[SECTION]_[SETTING]=value`. Example: `BLAZEBIN_GROOMING_ENABLED=true`
+Note: as an alternative to mounting the appsettings.json file, you can provide a .env file with your setting overrides. the env var name will be of the format `BLAZEBIN_[SECTION]__[SETTING]=value`. Example: `BLAZEBIN_GROOMING__ENABLED=true`
 
 ```sh
 docker run -d -v ~/appsettings.json:/app/appsettings.production.json -v ~/data:/app/data --memory 500M --cpus 2 -p 80:80 -e ASPNETCORE_URLS=http://+:80 ghcr.io/cisien/blazebin:latest
