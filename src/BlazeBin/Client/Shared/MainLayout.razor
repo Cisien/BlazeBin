@@ -20,7 +20,12 @@
 
     protected override void OnInitialized()
     {
-        uploadName = (this.Body?.Target as RouteView)?.RouteData.RouteValues["uploadName"].ToString();
+        string? uploadName;
+        var routeData = (this.Body?.Target as RouteView)?.RouteData;
+        if(routeData?.RouteValues.TryGetValue("uploadName", out var parameterValue) ?? false)
+        {
+            uploadName = parameterValue.ToString();
+        }
     }
 
     protected override void OnAfterRender(bool firstRender)
