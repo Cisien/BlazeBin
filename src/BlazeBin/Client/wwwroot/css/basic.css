@@ -3,6 +3,9 @@
     height: calc(100vh - 105px);
     background-color: rgb(30, 30, 30);
     color: #d4d4d4;
+    outline: none;
+    padding: 10px;
+    border: none;
 }
 
 button {
@@ -15,6 +18,7 @@ button {
     background-color: rgb(30, 30, 30);
     color: #d4d4d4;
     overflow: auto;
+    padding: 10px;
 }
 
 footer {
