@@ -15,7 +15,6 @@
     Layout = null;
     await state.Dispatch(() => state.SetClientConfig(appConfig.Client));
 }
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -52,11 +51,11 @@
     <link href="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.css" rel="stylesheet" asp-append-version="true" />
 
     <component type="typeof(HeadOutlet)" render-mode="WebAssemblyPrerendered" />
-    <noscript>
-        This version requires javascript and WebAssembly to be enabled. For a basic, html-only experience, navigate to <a href="~/basic">BlazeBin Basic</a>.
-    </noscript>
 </head>
 <body>
+    <noscript>
+        BlazeBin requires both JavaScript and WebAssembly to be enabled. For a basic, html-only experience, navigate to <a href="~/basic">BlazeBin Basic</a>.
+    </noscript>
     <main id="app">
         <component type="typeof(BlazeBin.Client.App)" render-mode="WebAssemblyPrerendered" />
     </main>
