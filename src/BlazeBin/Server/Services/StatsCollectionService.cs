@@ -44,8 +44,8 @@ public class StatsCollectionService : IHostedService
                 return;
             }
 
-            var entries = Directory.GetFiles(_config.BaseDirectory).Select(a => new FileInfo(a)).ToList();
-            var count = entries.Count;
+            var entries = new DirectoryInfo(_config.BaseDirectory).EnumerateFileSystemInfos().OfType<FileInfo>().ToArray();
+            var count = entries.Length;
             var size = 0L;
             var oldest = DateTime.UtcNow;
 
@@ -55,6 +55,11 @@ public class StatsCollectionService : IHostedService
             foreach (var entry in entries)
             {
                 if (ctsToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                if(entry == null)
                 {
                     return;
                 }
