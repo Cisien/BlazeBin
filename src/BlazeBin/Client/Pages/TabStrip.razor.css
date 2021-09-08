@@ -1,14 +1,17 @@
 ﻿
 .tabstrip {
     height: 35px;
-    overflow-y: auto;
-    overflow-x: auto;
+    overflow-y: clip;
+    overflow-x: scroll;
     white-space: nowrap;
     max-width: calc(100vw - 200px);
 }
 
     .tabstrip::-webkit-scrollbar {
-        display: none;
+        height: 5px;
+    }
+    .tabstrip::-webkit-scrollbar-thumb {
+        background-color: hsla(0,0%,39.2%,.7);
     }
 
 .new-tab {
@@ -122,7 +125,7 @@ input[type="text"] {
 
 @media screen and (max-width: 780px) {
     .tabstrip {
-        max-width: calc(100vw - 130px);
+        max-width: calc(100vw - 100px);
     }
 
     .tab {

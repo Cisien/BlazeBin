@@ -21,6 +21,10 @@ button {
     padding: 10px;
 }
 
+a {
+    color: #d4d4d4;
+}
+
 footer {
     background: rgba(255, 255, 203, 0.8);
     color: #000;
@@ -74,12 +78,13 @@ footer {
         background-color: black;
     }
 
-.file-list a {
-    color: #d4d4d4;
-}
-
 .file-list li.selected a {
     color: white !important;
+}
+
+h1 {
+    display: inline-block;
+    margin-right: 10px;
 }
 
 @media screen and (max-width: 780px) {

@@ -572,7 +572,7 @@ public class BlazeBinStateContainer
     {
         if (ActiveUpload?.LastServerId != null && !_nav.Uri.EndsWith(ActiveUpload.LastServerId))
         {
-            _nav.NavigateTo($"/{ActiveUpload.LastServerId}", false);
+            _nav.NavigateTo($"/{ActiveUpload.LastServerId}/{_activeFileIndex}", false);
         }
 
         if (OnChange != null)

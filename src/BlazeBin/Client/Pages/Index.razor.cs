@@ -17,7 +17,21 @@ public partial class Index : IDisposable
         set
         {
             _uploadName = value;
-            _ = ProcessUploadNameChange(_uploadName);
+            _ = ProcessUploadNameChange();
+        }
+    }
+    private int _activeIndex;
+    [Parameter]
+    public string? ActiveIndex
+    {
+        get
+        {
+            return _activeIndex.ToString();
+        }
+        set
+        {
+            _activeIndex = int.Parse(value ?? "0");
+            _ = ProcessUploadNameChange();
         }
     }
 
@@ -26,18 +40,18 @@ public partial class Index : IDisposable
         State!.OnChange += HandleStateChange;
     }
 
-    private async Task ProcessUploadNameChange(string? newName)
+    private async Task ProcessUploadNameChange()
     {
-        if (newName != null)
+        if (_uploadName != null)
         {
-            var existing = State!.Uploads?.FindIndex(a => a.LastServerId == newName);
+            var existing = State!.Uploads?.FindIndex(a => a.LastServerId == _uploadName);
             if (existing.HasValue && existing.Value != -1)
             {
                 await State!.Dispatch(() => State!.SelectUpload(existing.Value));
             }
             else
             {
-                await State!.Dispatch(() => State!.ReadUpload(newName));
+                await State!.Dispatch(() => State!.ReadUpload(_uploadName));
             }
         }
         else if ((State!.Uploads?.Count ?? 0) > 0)
@@ -52,6 +66,10 @@ public partial class Index : IDisposable
         {
             throw new InvalidOperationException("An initial state wasn't accounted for!");
         }
+
+        var index = Math.Max(State!._activeFileIndex, _activeIndex);
+
+        await State!.Dispatch(() => State!.SetActiveFile(index));
     }
 
     private Task HandleStateChange()

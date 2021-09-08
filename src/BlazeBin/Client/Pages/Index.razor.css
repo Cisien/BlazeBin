@@ -3,12 +3,11 @@
 }
 
     .row.body {
-        height: calc(100% - 35px);
+        height: calc(100vh - 63px);
     }
 
     .row.header {
         height: 35px;
-        flex-direction: column;
     }
 
 .col-left {
@@ -22,6 +21,10 @@
 @media screen and (max-width: 780px) {
 
     .col-left {
-        flex: 0 0 150px;
+        flex: 0 0 100px;
+    }
+
+    .row.body .col-left {
+        display: none;
     }
 }

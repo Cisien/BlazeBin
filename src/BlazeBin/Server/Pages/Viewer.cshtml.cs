@@ -1,13 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 
 using BlazeBin.Client.Services;
 using BlazeBin.Shared;
 
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace BlazeBin.Server.Pages;
@@ -18,7 +12,7 @@ public class ViewerModel : PageModel
 
     public int FileIndex { get; set; } = 0;
     public string? ServerId { get; set; }
-    public FileBundle Bundle { get; set; } = null!;
+    public FileBundle? Bundle { get; set; }
 
     public ViewerModel(IUploadService uploadSvc)
     {
@@ -38,6 +32,12 @@ public class ViewerModel : PageModel
 
         var bundleResult = await _upload.Get(ServerId);
         if (!bundleResult.Successful)
+        {
+            Response.Redirect("/basic");
+            return;
+        }
+
+        if (FileIndex > bundleResult.Value.Files.Count-1)
         {
             Response.Redirect("/basic");
             return;

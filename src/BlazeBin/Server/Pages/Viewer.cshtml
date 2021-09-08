@@ -7,12 +7,12 @@
 }
 
 <main id="app" class="basic">
-    <h1>BlazeBin Basic</h1>
+    <h1>BlazeBin Basic</h1> <a href="/@Model.ServerId/@Model.FileIndex" title="Enhanced Editor">View in the enhanced editor</a>
     <ul class="file-list">
-        @for (var i = 0; i < Model.Bundle.Files.Count; i++)
+        @for (var i = 0; i < (Model.Bundle?.Files.Count ?? 0); i++)
         {
-            <li class="@(i == Model.FileIndex ? " selected" : "")"><a href="/basic/viewer/@Model.ServerId/@i">@Model.Bundle.Files[i].Filename</a></li>
+            <li class="@(i == Model.FileIndex ? " selected" : "")"><a href="/basic/viewer/@Model.ServerId/@i">@Model.Bundle?.Files[i].Filename</a></li>
         }
     </ul>
-    <pre class="reader">@Model.Bundle.Files[Model.FileIndex].Data</pre>
+    <pre class="reader">@Model.Bundle?.Files[Model.FileIndex].Data</pre>
 </main>

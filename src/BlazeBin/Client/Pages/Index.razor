@@ -1,9 +1,30 @@
 ﻿@page "/"
 @page "/{uploadname}"
-<HeadContent> <!-- todo: validate fix for not showing in server-side render in preview 8/rc1 -->
+@page "/{uploadname}/{activeIndex}"
+<HeadContent>
+    <!-- todo: validate fix for not showing in server-side render in preview 8/rc1 -->
     <title>BlazeBin@(string.IsNullOrWhiteSpace(UploadName) ? "" : $" - {UploadName}")</title>
 </HeadContent>
 
+
+<div class="row header">
+    <div class="col-left">
+        <ActionButtons />
+    </div>
+    <div class="col-fill">
+        <TabStrip />
+    </div>
+</div>
+<div class="row body">
+    <div class="col-left">
+        <PasteList />
+    </div>
+    <div class="col-fill">
+         <Editor />
+    </div>
+</div>
+
+@*
 <div class="col-left">
     <div class="row header">
         <ActionButtons />
@@ -14,10 +35,10 @@
 </div>
 <div class="col-fill">
     <div class="row header">
-        <TabStrip />
+        <ActionButtons />
     </div>
     <div class="row body">
         <Editor />
     </div>
-</div>
+</div>*@
 <ErrorDialog />
