@@ -69,6 +69,8 @@
         window.onresize = (e) => {
             if (window.blazorMonaco && window.blazorMonaco.editor) {
                 window.blazorMonaco.editor.layout('editor', {});
+                let isNarrow = window.innerWidth < 780;
+                window.blazorMonaco.editor.updateOptions('editor', {minimap: {enabled: !isNarrow}, lineNumbers: isNarrow ? "off" : "on"})
             }
         };
     </script>
