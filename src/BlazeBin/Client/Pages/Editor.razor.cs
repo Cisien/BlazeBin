@@ -76,7 +76,7 @@ public partial class Editor : IAsyncDisposable
 
         var data = await model.GetValue(EndOfLinePreference.LF, false);
 
-        await State.Dispatch(() => State.UpdateFile(fileId, data));
+        await State.UpdateFile(fileId, data);
         _hasMarkedDirty = false;
     }
 

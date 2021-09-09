@@ -28,8 +28,13 @@ public partial class TabStrip : IDisposable
         {
             return;
         }
-        _ = State.ActiveUpload ?? throw new ArgumentException("Attempt to change set active file on an upload that doesn't exist");
 
+        if(index == State.ActiveFileIndex)
+        {
+            return;
+        }
+
+        _ = State.ActiveUpload ?? throw new ArgumentException("Attempt to change set active file on an upload that doesn't exist");
         await State.Dispatch(() => State.SetActiveFile(index));
     }
 
@@ -68,7 +73,6 @@ public partial class TabStrip : IDisposable
         await State.Dispatch(() => State.CreateFile(_newFilename, true));
         _newFilename = null;
     }
-
 
     public void Dispose()
     {

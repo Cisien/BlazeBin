@@ -3,6 +3,7 @@
     @for (var i = 0; i < (State.ActiveUpload?.Files ?? new List<FileData>()).Count; i++)
     {
         var item = State.ActiveUpload!.Files[i];
+        var index = i;
         var iconImage = "default_file.svg";
         var detectedType = item.GetLanguage();
         if (detectedType != null)
@@ -10,7 +11,7 @@
             iconImage = $"file_type_{detectedType}.svg";
         }
 
-        <div class="tab@(item.Id == State.ActiveFile?.Id ? " selected": "")" @onclick="@(e => TabClicked(e, i))" @onclick:preventDefault title="@item.Filename">
+        <div class="tab@(item.Id == State.ActiveFile?.Id ? " selected": "")" @onclick="@(e => TabClicked(e, index))" @onclick:preventDefault title="@item.Filename">
             <span class="close-tab-button" @onclick="@(e => CloseTab(e, item))" @onclick:preventDefault title="Remove @item.Id"><i class="fa fa-window-close" aria-hidden="true"></i></span>
             <input type="radio" name="filetab" checked="@(item == State.ActiveFile)" id="@item.Id" />
             <label for="@item.Id">

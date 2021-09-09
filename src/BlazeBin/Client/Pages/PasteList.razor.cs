@@ -5,11 +5,11 @@ namespace BlazeBin.Client.Pages;
 
 public partial class PasteList : IDisposable
 {
-    [Inject] private BlazeBinStateContainer? State { get; set; }
+    [Inject] private BlazeBinStateContainer State { get; set; } = null!;
 
     protected override void OnInitialized()
     {
-        State!.OnChange += HandleStateChange;
+        State.OnChange += HandleStateChange;
     }
 
     private Task HandleStateChange()
@@ -24,9 +24,9 @@ public partial class PasteList : IDisposable
         {
             return;
         }
-        _ = State!.Uploads ?? throw new ArgumentException(nameof(State.Uploads));
-        var index = State!.Uploads.FindIndex(a => a.Id == id);
-        await State!.Dispatch(() => State!.SelectUpload(index));
+        _ = State.Uploads ?? throw new ArgumentException(nameof(State.Uploads));
+        var index = State.Uploads.FindIndex(a => a.Id == id);
+        await State.Dispatch(() => State.SelectUpload(index));
     }
 
     private async Task RemoveUpload(MouseEventArgs e, string id)
@@ -37,7 +37,7 @@ public partial class PasteList : IDisposable
         }
 
         // prompt that upload is not posted, confirm
-        await State!.Dispatch(() => State!.DeleteUpload(id));
+        await State.Dispatch(() => State.DeleteUpload(id));
     }
 
     private async Task ToggleFavorite(MouseEventArgs e, string favorite)
@@ -47,13 +47,13 @@ public partial class PasteList : IDisposable
             return;
         }
 
-        if(State!.Favorites.Any(a => a == favorite))
+        if(State.Favorites.Any(a => a == favorite))
         {
-            await State!.Dispatch(() => State!.DeleteFavorite(favorite));
+            await State.Dispatch(() => State.DeleteFavorite(favorite));
         }
         else
         {
-            await State!.Dispatch(() => State!.CreateFavorite(favorite));
+            await State.Dispatch(() => State.CreateFavorite(favorite));
         }
     }
 
@@ -65,7 +65,7 @@ public partial class PasteList : IDisposable
             return;
         }
 
-        await State!.Dispatch(() => State!.DeleteHistory(history));
+        await State.Dispatch(() => State.DeleteHistory(history));
     }
 
     private async Task SelectNonFileBundle(MouseEventArgs e, string serverId)
@@ -75,12 +75,12 @@ public partial class PasteList : IDisposable
             return;
         }
 
-        await State!.Dispatch(() => State!.ReadUpload(serverId));
+        await State.Dispatch(() => State.ReadUpload(serverId));
     }
 
     public void Dispose()
     {
-        State!.OnChange -= HandleStateChange;
+        State.OnChange -= HandleStateChange;
         GC.SuppressFinalize(this);
     }
 }

@@ -9,7 +9,7 @@
     </Found>
     <NotFound>
         <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
+            <p>This set doesn't exist. Go to the <a style="color:white" href="/">editor</a></p>
         </LayoutView>
     </NotFound>
 </Router>
@@ -18,21 +18,21 @@
     public override async Task SetParametersAsync(ParameterView parameters)
     {
         appState.OnPersisting += PersistingServerState;
-        await state.Dispatch(() => state.InitializeUploadLists());
+        await state.InitializeUploadLists();
 
         if (appState.TryTakeAsJson<Error>("server-side-error", out var serverError) && serverError != null)
         {
-            await state.Dispatch(() => state.ShowError(serverError.Title, serverError.Text));
+            state.ShowError(serverError.Title, serverError.Text);
         }
 
         if (appState.TryTakeAsJson<string>("af-token", out var afToken))
         {
-            await state.Dispatch(() => state.StoreAntiforgeryToken(afToken));
+            state.StoreAntiforgeryToken(afToken);
         }
 
         if(appState.TryTakeAsJson<BlazeBinClient>("client-config", out var clientConfig) && clientConfig != null)
         {
-            await state.Dispatch(() => state.SetClientConfig(clientConfig));
+            state.SetClientConfig(clientConfig);
         }
 
         await base.SetParametersAsync(parameters);

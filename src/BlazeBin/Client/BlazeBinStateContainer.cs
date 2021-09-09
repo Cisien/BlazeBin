@@ -17,7 +17,7 @@ public class BlazeBinStateContainer
     private readonly IClientStorageService _storage;
     private readonly ILogger<BlazeBinStateContainer> _logger;
     private readonly NavigationManager _nav;
-
+   
     private const string UploadListKey = "upload-list";
     private const string HistoryListKey = "history-list";
     private const string FavoritesListKey = "favorites-list";
@@ -30,9 +30,9 @@ public class BlazeBinStateContainer
 
     public BlazeBinClient ClientConfig { get; private set; } = new();
 
-    public FileBundle? _adHocBundle;
-    public int _activeUploadIndex = -1;
-    public int _activeFileIndex = -1;
+    public FileBundle? AdHocBundle { get; private set; }
+    public int ActiveUploadIndex { get; private set; } = -1;
+    public int ActiveFileIndex { get; private set; } = -1;
 
     public FileData? ActiveFile
     {
@@ -45,9 +45,9 @@ public class BlazeBinStateContainer
                 return null;
             }
 
-            if (_activeFileIndex >= 0 && _activeFileIndex < bundle.Files.Count)
+            if (ActiveFileIndex >= 0 && ActiveFileIndex < bundle.Files.Count)
             {
-                return bundle.Files[_activeFileIndex];
+                return bundle.Files[ActiveFileIndex];
             }
             return null;
         }
@@ -57,18 +57,18 @@ public class BlazeBinStateContainer
     {
         get
         {
-            if (_adHocBundle != null)
+            if (AdHocBundle != null)
             {
-                return _adHocBundle;
+                return AdHocBundle;
             }
 
-            var isOor = _activeUploadIndex < 0 || _activeUploadIndex > Uploads.Count - 1;
+            var isOor = ActiveUploadIndex < 0 || ActiveUploadIndex > Uploads.Count - 1;
             if (isOor)
             {
                 return null;
             }
 
-            return Uploads[_activeUploadIndex];
+            return Uploads[ActiveUploadIndex];
         }
     }
 
@@ -76,6 +76,8 @@ public class BlazeBinStateContainer
 
     [MemberNotNullWhen(true, nameof(Error))]
     public bool DisplayError { get; private set; }
+
+    public bool IsServerSideRender { get; set; }
 
     public event Func<Task>? OnChange;
 
@@ -140,7 +142,6 @@ public class BlazeBinStateContainer
         }
     }
 
-    [RequiresUnreferencedCode("Requried by System.Text.Json.JsonSerializer")]
     public async Task ReadUpload(string serverId)
     {
         var fromApi = await _uploadSvc.Get(serverId);
@@ -150,7 +151,7 @@ public class BlazeBinStateContainer
             return;
         }
 
-        var existingIndex = Uploads.FindIndex(a => a.Id == fromApi.Value.Id);
+        var existingIndex = Uploads.FindIndex(a => a.LastServerId == fromApi.Value.LastServerId);
         if (existingIndex != -1)
         {
             SelectUpload(existingIndex);
@@ -158,7 +159,7 @@ public class BlazeBinStateContainer
         else
         {
             SelectUpload(-1);
-            _adHocBundle = fromApi.Value;
+            AdHocBundle = fromApi.Value;
         }
         _ = ActiveUpload ?? throw new InvalidOperationException("ActiveUpload returns null after loading an upload");
 
@@ -204,19 +205,19 @@ public class BlazeBinStateContainer
 
     public void SelectUpload(int index)
     {
-        if (_activeUploadIndex == index)
+        if (ActiveUploadIndex == index)
         {
             return;
         }
 
-        _activeUploadIndex = index;
+        ActiveUploadIndex = index;
         if (index == -1)
         {
             SetActiveFile(index);
             return;
         }
 
-        _adHocBundle = null;
+        AdHocBundle = null;
         if (ActiveUpload!.Files.Count > 0)
         {
             SetActiveFile(0);
@@ -259,10 +260,10 @@ public class BlazeBinStateContainer
         if (!Uploads.Any(a => a.Id == ActiveUpload.Id))
         {
             await InsertUpload(ActiveUpload, true);
-            if (_adHocBundle != null)
+            if (AdHocBundle != null)
             {
-                _activeFileIndex = -1;
-                _adHocBundle = null;
+                ActiveFileIndex = -1;
+                AdHocBundle = null;
             }
         }
 
@@ -370,9 +371,14 @@ public class BlazeBinStateContainer
 
     public void SetActiveFile(int index)
     {
+        if(ActiveFileIndex == index)
+        {
+            return;
+        }
+
         if (index == -1)
         {
-            _activeFileIndex = index;
+            ActiveFileIndex = index;
             return;
         }
 
@@ -383,7 +389,7 @@ public class BlazeBinStateContainer
 
         if (index == -1)
         {
-            _activeFileIndex = -1;
+            ActiveFileIndex = -1;
             return;
         }
 
@@ -398,18 +404,18 @@ public class BlazeBinStateContainer
             return;
         }
 
-        _activeFileIndex = index;
+        ActiveFileIndex = index;
     }
 
     private async Task PromoteAdHocBundle()
     {
-        if (_adHocBundle == null)
+        if (AdHocBundle == null)
         {
             return;
         }
 
-        await InsertUpload(_adHocBundle, true);
-        _adHocBundle = null;
+        await Dispatch(() => InsertUpload(AdHocBundle, true));
+        AdHocBundle = null;
     }
     #endregion
 
@@ -503,7 +509,7 @@ public class BlazeBinStateContainer
         }
         _logger.LogInformation("State change call initiated from {method} {filePath}: {lineNumber}. {dispatchedMethod}", method, filePath, lineNumber, work.Body);
 
-        if (Uploads.SelectMany(a => a.Files).SelectMany(a => a.Data).Count() + (_adHocBundle?.Files.SelectMany(a => a.Data).Count() ?? 0) > 2000)
+        if (Uploads.SelectMany(a => a.Files).SelectMany(a => a.Data).Count() + (AdHocBundle?.Files.SelectMany(a => a.Data).Count() ?? 0) > 2000)
         {
             _logger.LogInformation("State: <too large to serialize>");
         }
@@ -542,7 +548,7 @@ public class BlazeBinStateContainer
         }
         _logger.LogInformation("State change call initiated from {method} {filePath}: {lineNumber}. {dispatchedMethod}", method, filePath, lineNumber, work.Body);
 
-        if (Uploads.SelectMany(a => a.Files).SelectMany(a => a.Data).Count() + (_adHocBundle?.Files.SelectMany(a => a.Data).Count() ?? 0) > 2000)
+        if (Uploads.SelectMany(a => a.Files).SelectMany(a => a.Data).Count() + (AdHocBundle?.Files.SelectMany(a => a.Data).Count() ?? 0) > 2000)
         {
             _logger.LogInformation("State: <too large to serialize>");
         }
@@ -570,9 +576,16 @@ public class BlazeBinStateContainer
 
     private async Task StateHasChanged()
     {
-        if (ActiveUpload?.LastServerId != null && !_nav.Uri.EndsWith(ActiveUpload.LastServerId))
+        if (!IsServerSideRender)
         {
-            _nav.NavigateTo($"/{ActiveUpload.LastServerId}/{_activeFileIndex}", false);
+            if (ActiveUpload?.LastServerId != null && !_nav.Uri.EndsWith(ActiveUpload.LastServerId))
+            {
+                _nav.NavigateTo($"/{ActiveUpload.LastServerId}/{ActiveFileIndex}", false);
+            }
+            else if(!_nav.Uri.EndsWith("/"))
+            {
+                _nav.NavigateTo($"/", false);
+            }
         }
 
         if (OnChange != null)

@@ -64,7 +64,7 @@ public partial class ActionButtons : IDisposable
         }
         else if (State.ActiveUpload != null && State.ActiveUpload.LastServerId != null)
         {
-            Nav!.NavigateTo($"/basic/viewer/{State.ActiveUpload.LastServerId}/{State._activeFileIndex}", true);
+            Nav!.NavigateTo($"/basic/viewer/{State.ActiveUpload.LastServerId}/{State.ActiveFileIndex}", true);
         }
     }
 

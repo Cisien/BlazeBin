@@ -13,8 +13,9 @@
 @inject IAntiforgery af
 @{
     Layout = null;
+    state.IsServerSideRender = true;
     await state.CreateUpload(true);
-    await state.Dispatch(() => state.SetClientConfig(appConfig.Client));
+    state.SetClientConfig(appConfig.Client);
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -68,7 +69,10 @@
             if (window.blazorMonaco && window.blazorMonaco.editor) {
                 window.blazorMonaco.editor.layout('editor', {});
                 let isNarrow = window.innerWidth < 780;
-                window.blazorMonaco.editor.updateOptions('editor', {minimap: {enabled: !isNarrow}, lineNumbers: isNarrow ? "off" : "on"})
+                window.blazorMonaco.editor.updateOptions('editor', {
+                    minimap: {enabled: !isNarrow}, 
+                    lineNumbers: isNarrow ? "off" : "on"
+                });
             }
         };
         window.blazebin = {
