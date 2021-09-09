@@ -1,7 +1,8 @@
 ﻿<div class="tabstrip">
 
-    @foreach (var item in State!.ActiveUpload?.Files ?? new List<FileData>())
+    @for (var i = 0; i < (State.ActiveUpload?.Files ?? new List<FileData>()).Count; i++)
     {
+        var item = State.ActiveUpload!.Files[i];
         var iconImage = "default_file.svg";
         var detectedType = item.GetLanguage();
         if (detectedType != null)
@@ -9,9 +10,9 @@
             iconImage = $"file_type_{detectedType}.svg";
         }
 
-        <div class="tab@(item.Id == State!.ActiveFile?.Id ? " selected": "")" @onclick="@(e => TabClicked(e, @item))" @onclick:preventDefault title="@item.Filename">
+        <div class="tab@(item.Id == State.ActiveFile?.Id ? " selected": "")" @onclick="@(e => TabClicked(e, i))" @onclick:preventDefault title="@item.Filename">
             <span class="close-tab-button" @onclick="@(e => CloseTab(e, item))" @onclick:preventDefault title="Remove @item.Id"><i class="fa fa-window-close" aria-hidden="true"></i></span>
-            <input type="radio" name="filetab" checked="@(item == State!.ActiveFile)" id="@item.Id" />
+            <input type="radio" name="filetab" checked="@(item == State.ActiveFile)" id="@item.Id" />
             <label for="@item.Id">
                 <span class="helper"></span><img src="icons/@iconImage" alt="@item.Filename" width="16" height="16" /> <span class="tab-name">@item.Filename</span>
             </label>
@@ -27,7 +28,7 @@
         </div>
     }
 
-    @if (State!.ActiveUpload != null && State!.ActiveUpload.Files.Count < 6 && _newFilename == null)
+    @if (State.ActiveUpload != null && State.ActiveUpload.Files.Count < 6 && _newFilename == null)
     {
         <div class="new-tab" @onclick="@CreateTab" @onclick:preventDefault title="Add File"><i class="fa fa-plus-square-o"></i></div>
     }

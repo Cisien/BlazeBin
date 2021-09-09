@@ -2,12 +2,14 @@
 using BlazeBin.Shared.Extensions;
 using BlazorMonaco;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace BlazeBin.Client.Pages;
 
 public partial class Editor : IAsyncDisposable
 {
-    [Inject] private BlazeBinStateContainer? State { get; set; }
+    [Inject] private BlazeBinStateContainer State { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
 
     private const string ModelUriFormat = "https://bin.mod.gg/{0}/{1}";
     private MonacoEditor? _editor;
@@ -15,8 +17,15 @@ public partial class Editor : IAsyncDisposable
 
     public async Task EditorInitialized(MonacoEditorBase editor)
     {
-        State!.OnChange += HandleStateChange;
-
+        State.OnChange += HandleStateChange;
+        var windowWidth = await JS.InvokeAsync<int>("blazebin.getWindowWidth");
+        var isNarrow = windowWidth < 780;
+        await _editor!.UpdateOptions(new GlobalEditorOptions
+        {
+            Minimap = new EditorMinimapOptions { Enabled = !isNarrow },
+            LineNumbers = isNarrow ? "off" : "on"
+        });
+        
         await HandleStateChange();
     }
 
@@ -39,7 +48,7 @@ public partial class Editor : IAsyncDisposable
 
         if (!_hasMarkedDirty)
         {
-            await State!.Dispatch(() => State!.SetActiveUploadDirty());
+            await State.Dispatch(() => State.SetActiveUploadDirty());
 
             _hasMarkedDirty = true;
         }
@@ -48,7 +57,7 @@ public partial class Editor : IAsyncDisposable
     // save and raise events to notify everything else (for saving, etc)
     private async Task ModelChanged(ModelChangedEvent changed)
     {
-        if (State!.ActiveUpload == null)
+        if (State.ActiveUpload == null)
         {
             return;
         }
@@ -60,14 +69,14 @@ public partial class Editor : IAsyncDisposable
         }
         var (bundleId, fileId) = GetIdsFromModelUri(model.Uri);
 
-        if (State!.ActiveUpload.Id != bundleId)
+        if (State.ActiveUpload.Id != bundleId)
         {
             return;
         }
 
         var data = await model.GetValue(EndOfLinePreference.LF, false);
 
-        await State!.Dispatch(() => State!.UpdateFile(fileId, data));
+        await State.Dispatch(() => State.UpdateFile(fileId, data));
         _hasMarkedDirty = false;
     }
 
@@ -83,7 +92,7 @@ public partial class Editor : IAsyncDisposable
         var options = new StandaloneEditorConstructionOptions
         {
             AutomaticLayout = true,
-            Theme = "vs-dark"
+            Theme = "vs-dark"            
         };
 
         return options;
@@ -100,11 +109,19 @@ public partial class Editor : IAsyncDisposable
         {
             if (!DataExistsForModel(model) && !await model.IsDisposed())
             {
-                await model.DisposeModel();
+                try
+                {
+                    await model.DisposeModel();
+                }
+                catch (Exception)
+                {
+                    // sometimes this throws an "Unhandled exception rendering component: Cannot read properties of null (reading 'dispose')" exception in jsland,
+                    // even though everything is good on the C# side
+                }
             }
         }
 
-        if (State!.ActiveUpload == null)
+        if (State.ActiveUpload == null)
         {
             var defuncTModel = await _editor.GetModel();
             if (defuncTModel != null)
@@ -115,9 +132,9 @@ public partial class Editor : IAsyncDisposable
         }
 
         // create models that don't exist yet
-        foreach (var file in State!.ActiveUpload.Files)
+        foreach (var file in State.ActiveUpload.Files)
         {
-            var modelUri = GetUriForFile(State!.ActiveUpload, file);
+            var modelUri = GetUriForFile(State.ActiveUpload, file);
             TextModel? existingModel = null;
             foreach (var model in models)
             {
@@ -142,8 +159,13 @@ public partial class Editor : IAsyncDisposable
             {
                 existingModel = await EnsureModelCreated(file);
             }
+            if(existingModel == null) // still
+            {
+                // couldn't create the model (likely due to a race condition when swapping models too quickly)
+                continue;
+            }
 
-            if (file.Id == State!.ActiveFile?.Id)
+            if (file.Id == State.ActiveFile?.Id)
             {
                 var editorModel = await _editor.GetModel();
                 if (editorModel?.Uri == existingModel.Uri)
@@ -157,23 +179,23 @@ public partial class Editor : IAsyncDisposable
 
     private bool DataExistsForModel(TextModel model)
     {
-        if (State!.ActiveUpload == null)
+        if (State.ActiveUpload == null)
         {
             return false;
         }
 
-        if (State!.ActiveFile == null)
+        if (State.ActiveFile == null)
         {
             return false;
         }
 
         var (bundleId, fileId) = GetIdsFromModelUri(model.Uri);
-        if (State!.ActiveUpload.Id != bundleId)
+        if (State.ActiveUpload.Id != bundleId)
         {
             return false;
         }
 
-        var existing = State!.ActiveUpload.Files.SingleOrDefault(a => a.Id == fileId);
+        var existing = State.ActiveUpload.Files.SingleOrDefault(a => a.Id == fileId);
         if (existing == null)
         {
             return false;
@@ -183,24 +205,32 @@ public partial class Editor : IAsyncDisposable
 
     private async Task<TextModel> EnsureModelCreated(FileData file)
     {
-        if (State!.ActiveUpload == null)
+        if (State.ActiveUpload == null)
         {
             throw new ArgumentException(nameof(State.ActiveUpload));
         }
 
-        if (State!.ActiveFile == null)
+        if (State.ActiveFile == null)
         {
             throw new ArgumentException(nameof(State.ActiveFile));
         }
 
-        var modelUri = GetUriForFile(State!.ActiveUpload, file);
+        var modelUri = GetUriForFile(State.ActiveUpload, file);
         var model = await MonacoEditorBase.GetModel(modelUri);
 
         if (model == null || await model.IsDisposed())
         {
-            model = await MonacoEditorBase.CreateModel(file.Data, file.GetLanguage(), modelUri);
+            try
+            {
+                model = await MonacoEditorBase.CreateModel(file.Data, file.GetLanguage(), modelUri);
+            }
+            catch
+            {
+                // another unavoidable race condition where jsland throws an exception even though we validated it in c#
+                // Unhandled exception rendering component: ModelService: Cannot add model because it already exists!
+            }
         }
-        return model;
+        return model!;
     }
 
     private static string GetUriForFile(FileBundle bundle, FileData file)
@@ -236,7 +266,7 @@ public partial class Editor : IAsyncDisposable
 
             await _editor.DisposeEditor();
         }
-        State!.OnChange -= HandleStateChange;
+        State.OnChange -= HandleStateChange;
         GC.SuppressFinalize(this);
     }
 }

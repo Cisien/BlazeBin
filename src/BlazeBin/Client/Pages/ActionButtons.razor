@@ -1,5 +1,5 @@
 ﻿<div class="action-strip">
     <button class="action" @onclick="CreateNewBundle"><i class="fa fa-file-text-o" aria-hidden="true" title="Create new bundle"></i><span> New</span></button>
     <button class="action" disabled="@IsSavingDisabled()" @onclick="SaveFileBundle" title="Save currnet bundle"><i class="fa @(_saving ? "fa-spin fa-spinner" : "fa-floppy-o")" aria-hidden="true"></i><span> Save</span></button>
-    <button class="action" @onclick="RedirectToBasic"><i class="fa fa-code")" aria-hidden="true" title="Basic editor"></i><span> Basic</span></button>
+    <button class="action" @onclick="RedirectToBasic"><i class="fa fa-code" aria-hidden="true" title="Basic editor"></i><span> Basic</span></button>
 </div>

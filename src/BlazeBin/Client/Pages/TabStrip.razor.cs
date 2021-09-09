@@ -7,13 +7,13 @@ namespace BlazeBin.Client.Pages;
 
 public partial class TabStrip : IDisposable
 {
-    [Inject] private BlazeBinStateContainer? State { get; set; }
+    [Inject] private BlazeBinStateContainer State { get; set; } = null!;
 
     private string? _newFilename;
 
     protected override void OnInitialized()
     {
-        State!.OnChange += HandleStateChange;
+        State.OnChange += HandleStateChange;
     }
 
     private Task HandleStateChange()
@@ -22,16 +22,15 @@ public partial class TabStrip : IDisposable
         return Task.CompletedTask;
     }
 
-    private async Task TabClicked(MouseEventArgs e, FileData data)
+    private async Task TabClicked(MouseEventArgs e, int index)
     {
         if (e.Detail > 1)
         {
             return;
         }
-        _ = State!.ActiveUpload ?? throw new ArgumentException("Attempt to change set active file on an upload that doesn't exist");
+        _ = State.ActiveUpload ?? throw new ArgumentException("Attempt to change set active file on an upload that doesn't exist");
 
-        var index = State!.ActiveUpload.Files.FindIndex(a => a.Id == data.Id);
-        await State!.Dispatch(() => State!.SetActiveFile(index));
+        await State.Dispatch(() => State.SetActiveFile(index));
     }
 
     private async Task CloseTab(MouseEventArgs e, FileData data)
@@ -41,7 +40,7 @@ public partial class TabStrip : IDisposable
             return;
         }
 
-        await State!.Dispatch(() => State!.DeleteFile(data.Id));
+        await State.Dispatch(() => State.DeleteFile(data.Id));
     }
 
     private void CreateTab(MouseEventArgs e)
@@ -66,14 +65,14 @@ public partial class TabStrip : IDisposable
             return;
         }
 
-        await State!.Dispatch(() => State!.CreateFile(_newFilename, true));
+        await State.Dispatch(() => State.CreateFile(_newFilename, true));
         _newFilename = null;
     }
 
 
     public void Dispose()
     {
-        State!.OnChange -= HandleStateChange;
+        State.OnChange -= HandleStateChange;
         GC.SuppressFinalize(this);
     }
 }

@@ -13,6 +13,7 @@
 @inject IAntiforgery af
 @{
     Layout = null;
+    await state.CreateUpload(true);
     await state.Dispatch(() => state.SetClientConfig(appConfig.Client));
 }
 <!DOCTYPE html>
@@ -40,7 +41,6 @@
                          instrumentationKey: '@key'
                     }
                 });
-
             </script>
         }
     }
@@ -62,9 +62,7 @@
     <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js" asp-append-version="true"></script>
     <script>require.config({ paths: { 'vs': '_content/BlazorMonaco/lib/monaco-editor/min/vs' } });</script>
     <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js" asp-append-version="true"></script>
-    <script src="_content/BlazorMonaco/jsInterop.js" asp-append-version="true"></script>
-    <script src="_framework/blazor.webassembly.js" asp-append-version="true"></script>
-    <script>
+    <script src="_content/BlazorMonaco/jsInterop.js" asp-append-version="true"></script><script>
         // (yet another) hack to make the monaco editor behave
         window.onresize = (e) => {
             if (window.blazorMonaco && window.blazorMonaco.editor) {
@@ -73,7 +71,14 @@
                 window.blazorMonaco.editor.updateOptions('editor', {minimap: {enabled: !isNarrow}, lineNumbers: isNarrow ? "off" : "on"})
             }
         };
+        window.blazebin = {
+        getWindowWidth: function() {
+            return window.innerWidth; 
+            } 
+        };
     </script>
+    <script src="_framework/blazor.webassembly.js" asp-append-version="true"></script>
+    
     @{
         var tokens = af.GetAndStoreTokens(HttpContext);
         var requestToken = tokens.RequestToken;
