@@ -13,9 +13,17 @@ public partial class Editor : IAsyncDisposable
     [Inject] private BlazeBinStateContainer State { get; set; } = null!;
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
-    private const string ModelUriFormat = "https://bin.mod.gg/{0}/{1}";
+    private const string ModelUriFormat = "https://blazebin.io/{0}/{1}";
     private MonacoEditor? _editor;
     private bool _hasMarkedDirty = false;
+
+    protected override void OnInitialized()
+    {
+        if(State.IsServerSideRender)
+        {
+            State.OnChange += () => { StateHasChanged(); return Task.CompletedTask; };
+        }
+    }
 
     public async Task EditorInitialized(MonacoEditorBase editor)
     {
