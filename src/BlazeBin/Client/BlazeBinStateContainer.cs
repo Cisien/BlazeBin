@@ -17,7 +17,7 @@ public class BlazeBinStateContainer
     private readonly IClientStorageService _storage;
     private readonly ILogger<BlazeBinStateContainer> _logger;
     private readonly NavigationManager _nav;
-   
+
     private const string UploadListKey = "upload-list";
     private const string HistoryListKey = "history-list";
     private const string FavoritesListKey = "favorites-list";
@@ -93,17 +93,19 @@ public class BlazeBinStateContainer
         Uploads = new();
     }
 
-    public void StoreAntiforgeryToken(string? token)
+    public bool StoreAntiforgeryToken(string? token)
     {
         _uploadSvc.SetAntiforgeryToken(token);
+        return false;
     }
 
-    public void SetClientConfig(BlazeBinClient clientConfig)
+    public bool SetClientConfig(BlazeBinClient clientConfig)
     {
         ClientConfig = clientConfig;
+        return true;
     }
 
-    public async Task InitializeUploadLists()
+    public async Task<bool> InitializeUploadLists()
     {
         Uploads = await _storage.Get<FileBundle>(UploadListKey);
 
@@ -114,18 +116,28 @@ public class BlazeBinStateContainer
 
         Favorites = await _storage.Get<string>(FavoritesListKey);
         History = await _storage.Get<string>(HistoryListKey);
+
+        return true;
     }
 
     #region uploads
-    public async Task CreateUpload(bool setActive)
+    public async Task<bool> CreateUpload(bool setActive)
     {
         var upload = FileBundle.New(_keygen.GenerateKey(GeneratedIdLength).ToString(), _keygen.GenerateKey(GeneratedIdLength).ToString());
         await InsertUpload(upload, setActive);
+        return true;
     }
 
-    public async Task InsertUpload(FileBundle upload, bool setActive)
+    public async Task<bool> InsertUpload(FileBundle upload, bool setActive)
     {
         var existingIndex = Uploads.FindIndex(a => a.Id == upload.Id);
+
+        if (existingIndex != -1)
+        {
+            var newid = _keygen.GenerateKey(GeneratedIdLength).ToString();
+            upload = upload with { Id = newid, LastServerId = null };
+        }
+
         var index = Math.Max(existingIndex, 0);
 
         Uploads.Insert(index, upload);
@@ -140,28 +152,19 @@ public class BlazeBinStateContainer
         {
             SelectUpload(index);
         }
+        return true;
     }
 
-    public async Task ReadUpload(string serverId)
+    public async Task<bool> ReadUpload(string serverId)
     {
         var fromApi = await _uploadSvc.Get(serverId);
         if (!fromApi.Successful)
         {
-            ShowError($"Unable to load {serverId}", fromApi.Error);
-            return;
+            return ShowError($"Unable to load {serverId}", fromApi.Error);
         }
 
-        var existingIndex = Uploads.FindIndex(a => a.LastServerId == fromApi.Value.LastServerId);
-        if (existingIndex != -1)
-        {
-            SelectUpload(existingIndex);
-        }
-        else
-        {
-            SelectUpload(-1);
-            AdHocBundle = fromApi.Value;
-        }
-        _ = ActiveUpload ?? throw new InvalidOperationException("ActiveUpload returns null after loading an upload");
+        SelectUpload(-1);
+        AdHocBundle = fromApi.Value;
 
         SetActiveFile(0);
 
@@ -169,9 +172,10 @@ public class BlazeBinStateContainer
         {
             await CreateHistory(serverId);
         }
+        return true;
     }
 
-    public async Task DeleteUpload(string id)
+    public async Task<bool> DeleteUpload(string id)
     {
         var uploadIndex = Uploads.FindIndex(a => a.Id == id);
         if (uploadIndex == -1)
@@ -185,9 +189,10 @@ public class BlazeBinStateContainer
 
         if (Uploads.Count == 0)
         {
-            SetActiveFile(-1);
-            SelectUpload(-1);
-            return;
+            AdHocBundle = null;
+            bool changed = SetActiveFile(-1);
+            changed = changed || SelectUpload(-1);
+            return changed;
         }
 
         if (uploadIndex < 0)
@@ -200,21 +205,21 @@ public class BlazeBinStateContainer
             uploadIndex = Uploads.Count - 1;
         }
 
-        SelectUpload(uploadIndex);
+        return SelectUpload(uploadIndex);
     }
 
-    public void SelectUpload(int index)
+    public bool SelectUpload(int index)
     {
         if (ActiveUploadIndex == index)
         {
-            return;
+            return false;
         }
 
         ActiveUploadIndex = index;
         if (index == -1)
         {
-            SetActiveFile(index);
-            return;
+            SetActiveFile(-1);
+            return true;
         }
 
         AdHocBundle = null;
@@ -222,9 +227,10 @@ public class BlazeBinStateContainer
         {
             SetActiveFile(0);
         }
+        return true;
     }
 
-    public async Task SaveActiveUpload()
+    public async Task<bool> SaveActiveUpload()
     {
         if (ActiveUpload == null)
         {
@@ -238,21 +244,19 @@ public class BlazeBinStateContainer
 
         if (ActiveUpload.LastServerId != null)
         {
-            return;
+            return false;
         }
 
         if (ActiveUpload.Files.SelectMany(a => a.Data).Count() > 390_000)
         {
-            ShowError("File length limit exceeded", "The number characters contained in the files in this set is larger than what the server will accept.\nReduce the size of the files or split this into multiple sets.");
-            return;
+            return ShowError("File length limit exceeded", "The number characters contained in the files in this set is larger than what the server will accept.\nReduce the size of the files or split this into multiple sets.");
         }
 
         var result = await _uploadSvc.Set(ActiveUpload);
 
         if (!result.Successful)
         {
-            ShowError($"Failed to save {ActiveUpload.Id}", result.Error);
-            return;
+            return ShowError($"Failed to save {ActiveUpload.Id}", result.Error);
         }
 
         ActiveUpload.LastServerId = result.Value;
@@ -268,9 +272,10 @@ public class BlazeBinStateContainer
         }
 
         await _storage.Set(UploadListKey, Uploads);
+        return true;
     }
 
-    public void SetActiveUploadDirty()
+    public async Task<bool> SetActiveUploadDirty()
     {
         if (ActiveUpload == null)
         {
@@ -279,15 +284,21 @@ public class BlazeBinStateContainer
 
         if (ActiveUpload.LastServerId == null)
         {
-            return;
+            return false;
+        }
+
+        if (ActiveUpload == AdHocBundle)
+        {
+            await PromoteAdHocBundle();
         }
 
         ActiveUpload.LastServerId = null;
+        return true;
     }
     #endregion
 
     #region files
-    public async Task CreateFile(string filename, bool setActive)
+    public async Task<bool> CreateFile(string filename, bool setActive)
     {
         if (ActiveUpload == null)
         {
@@ -296,8 +307,7 @@ public class BlazeBinStateContainer
 
         if (ActiveUpload.Files.Any(a => a.Filename == filename))
         {
-            ShowError("Name Conflict", $"The current set already contains file with the name of {filename}");
-            return;
+            return ShowError("Name Conflict", $"The current set already contains file with the name of {filename}");
         }
 
         await PromoteAdHocBundle();
@@ -311,9 +321,11 @@ public class BlazeBinStateContainer
             SetActiveFile(ActiveUpload.Files.IndexOf(newFile));
         }
         await _storage.Set(UploadListKey, Uploads);
+
+        return true;
     }
 
-    public async Task UpdateFile(string id, string contents) // maybe do filename also later?
+    public async Task<bool> UpdateFile(string id, string contents) // maybe do filename also later?
     {
         if (ActiveUpload == null)
         {
@@ -323,13 +335,19 @@ public class BlazeBinStateContainer
         var file = ActiveUpload.Files.SingleOrDefault(a => a.Id == id);
         if (file == null)
         {
-            return;
+            file = AdHocBundle?.Files.SingleOrDefault(a => a.Id == id);
+        }
+
+        if (file == null)
+        {
+            return false;
         }
 
         if (file.Data == contents)
         {
-            return;
+            return false;
         }
+
         await PromoteAdHocBundle();
 
         var index = ActiveUpload.Files.IndexOf(file);
@@ -337,9 +355,11 @@ public class BlazeBinStateContainer
         ActiveUpload.LastServerId = null;
 
         await _storage.Set(UploadListKey, Uploads);
+
+        return true;
     }
 
-    public async Task DeleteFile(string id)
+    public async Task<bool> DeleteFile(string id)
     {
         if (ActiveUpload == null)
         {
@@ -349,7 +369,7 @@ public class BlazeBinStateContainer
         var fileIndex = ActiveUpload.Files.FindIndex(a => a.Id == id);
         if (fileIndex == -1)
         {
-            return;
+            return false;
         }
         await PromoteAdHocBundle();
 
@@ -367,19 +387,20 @@ public class BlazeBinStateContainer
             SetActiveFile(fileIndex);
         }
         await _storage.Set(UploadListKey, Uploads);
+        return true;
     }
 
-    public void SetActiveFile(int index)
+    public bool SetActiveFile(int index)
     {
-        if(ActiveFileIndex == index)
+        if (ActiveFileIndex == index)
         {
-            return;
+            return false;
         }
 
         if (index == -1)
         {
             ActiveFileIndex = index;
-            return;
+            return true;
         }
 
         if (ActiveUpload == null)
@@ -387,44 +408,37 @@ public class BlazeBinStateContainer
             throw new ArgumentException(nameof(ActiveUpload));
         }
 
-        if (index == -1)
-        {
-            ActiveFileIndex = -1;
-            return;
-        }
-
         var isOutOfRange = index >= ActiveUpload.Files.Count;
         if (isOutOfRange)
         {
-            return;
-        }
-
-        if (ActiveFile?.Id == ActiveUpload.Files[index].Id)
-        {
-            return;
+            return false;
         }
 
         ActiveFileIndex = index;
+        return true;
     }
 
-    private async Task PromoteAdHocBundle()
+    private async Task<bool> PromoteAdHocBundle()
     {
         if (AdHocBundle == null)
         {
-            return;
+            return false;
         }
 
-        await Dispatch(() => InsertUpload(AdHocBundle, true));
+        var newid = _keygen.GenerateKey(GeneratedIdLength).ToString();
+        var newBundle = AdHocBundle with { LastServerId = null, Id = newid };
+        await InsertUpload(newBundle, true);
         AdHocBundle = null;
+        return true;
     }
     #endregion
 
     #region history
-    public async Task CreateHistory(string serverId)
+    public async Task<bool> CreateHistory(string serverId)
     {
         if (History.Any(a => a == serverId))
         {
-            return;
+            return false;
         }
 
         History.Insert(0, serverId);
@@ -434,28 +448,30 @@ public class BlazeBinStateContainer
         }
 
         await _storage.Set(HistoryListKey, History);
+        return true;
     }
 
-    public async Task DeleteHistory(string serverId)
+    public async Task<bool> DeleteHistory(string serverId)
     {
         var historyItem = History.SingleOrDefault(a => a == serverId);
         if (historyItem == null)
         {
-            return;
+            return false;
         }
 
         History.Remove(historyItem);
         await _storage.Set(HistoryListKey, History);
+        return true;
     }
 
     #endregion
 
     #region favorites
-    public async Task CreateFavorite(string serverId)
+    public async Task<bool> CreateFavorite(string serverId)
     {
         if (Favorites.Any(a => a == serverId))
         {
-            return;
+            return false;
         }
 
         Favorites.Insert(0, serverId);
@@ -465,49 +481,55 @@ public class BlazeBinStateContainer
         }
 
         await _storage.Set(FavoritesListKey, Favorites);
+        return true;
     }
 
-    public async Task DeleteFavorite(string serverId)
+    public async Task<bool> DeleteFavorite(string serverId)
     {
         var favoriteItem = Favorites.SingleOrDefault(a => a == serverId);
         if (favoriteItem == null)
         {
-            return;
+            return false;
         }
 
         Favorites.Remove(favoriteItem);
         await _storage.Set(FavoritesListKey, Favorites);
+        return true;
     }
     #endregion
 
     #region ErrorDialog
 
-    public void ResetMessage()
+    public bool ResetMessage()
     {
         Error = null;
         DisplayError = false;
+        return true;
     }
 
-    public void ShowError(string title, string message)
+    public bool ShowError(string title, string message)
     {
         Error = new Error(title, message);
         DisplayError = true;
+
+        return true;
     }
     #endregion
 
     #region Dispatch
 #if DEBUG
-    public async Task Dispatch(Expression<Func<Task>> work, [CallerMemberName] string method = "", [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = -1)
+    public async Task Dispatch(Expression<Func<Task<bool>>> work, [CallerMemberName] string method = "", [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = -1)
     {
+        bool stateChanged = false;
         try
         {
-            await work.Compile()();
+            stateChanged = await work.Compile()();
         }
         catch (Exception ex)
         {
-            ShowError("Unhandled Exception", ex.ToString());
+            stateChanged = stateChanged || ShowError("Unhandled Exception", ex.ToString());
         }
-        _logger.LogInformation("State change call initiated from {method} {filePath}: {lineNumber}. {dispatchedMethod}", method, filePath, lineNumber, work.Body);
+        _logger.LogInformation("State change: {stateChanged}; from {method} {filePath}: {lineNumber}. {dispatchedMethod}", stateChanged, method, filePath, lineNumber, work.Body);
 
         if (Uploads.SelectMany(a => a.Files).SelectMany(a => a.Data).Count() + (AdHocBundle?.Files.SelectMany(a => a.Data).Count() ?? 0) > 2000)
         {
@@ -518,35 +540,44 @@ public class BlazeBinStateContainer
             _logger.LogInformation("State: {state}", JsonSerializer.Serialize(this, new JsonSerializerOptions { IncludeFields = true, WriteIndented = true, IgnoreReadOnlyFields = false }));
         }
 
-        await StateHasChanged();
+        if (stateChanged)
+        {
+            await StateHasChanged();
+        }
     }
 #else
-    public async Task Dispatch(Func<Task> work)
+    public async Task Dispatch(Func<Task<bool>> work)
     {
+        bool stateChanged = false;
         try
         {
-            await work();
+            stateChanged = await work();
         }
         catch (Exception ex)
         {
-            ShowError("Unhandled Exception", ex.Message);
+            stateChanged = stateChanged || ShowError("Unhandled Exception", ex.Message);
         }
-        await StateHasChanged();
+
+        if(stateChanged) 
+        {
+            await StateHasChanged();
+        }
     }
 #endif
 
 #if DEBUG
-    public async Task Dispatch(Expression<Action> work, [CallerMemberName] string method = "", [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = -1)
+    public async Task Dispatch(Expression<Func<bool>> work, [CallerMemberName] string method = "", [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = -1)
     {
+        bool stateChanged = false;
         try
         {
-            work.Compile()();
+            stateChanged = work.Compile()();
         }
         catch (Exception ex)
         {
-            ShowError("Unhandled Exception", ex.ToString());
+            stateChanged = stateChanged || ShowError("Unhandled Exception", ex.ToString());
         }
-        _logger.LogInformation("State change call initiated from {method} {filePath}: {lineNumber}. {dispatchedMethod}", method, filePath, lineNumber, work.Body);
+        _logger.LogInformation("State change: {stateChanged}; from {method} {filePath}: {lineNumber}. {dispatchedMethod}", stateChanged, method, filePath, lineNumber, work.Body);
 
         if (Uploads.SelectMany(a => a.Files).SelectMany(a => a.Data).Count() + (AdHocBundle?.Files.SelectMany(a => a.Data).Count() ?? 0) > 2000)
         {
@@ -557,20 +588,28 @@ public class BlazeBinStateContainer
             _logger.LogInformation("State: {state}", JsonSerializer.Serialize(this, new JsonSerializerOptions { IncludeFields = true, WriteIndented = true, IgnoreReadOnlyFields = false }));
         }
 
-        await StateHasChanged();
+        if (stateChanged)
+        {
+            await StateHasChanged();
+        }
     }
 #else
-    public async Task Dispatch(Action work)
+    public async Task Dispatch(Func<bool> work)
     {
+        bool stateChanged = false;
         try
         {
-            work();
+            stateChanged = work();
         }
         catch (Exception ex)
         {
-            ShowError("Unhandled Exception", ex.Message);
+            stateChanged = stateChanged || ShowError("Unhandled Exception", ex.Message);
         }
-        await StateHasChanged();
+
+        if(stateChanged) 
+        {
+            await StateHasChanged();
+        }
     }
 #endif
 
@@ -578,13 +617,26 @@ public class BlazeBinStateContainer
     {
         if (!IsServerSideRender)
         {
-            if (ActiveUpload?.LastServerId != null && !_nav.Uri.EndsWith(ActiveUpload.LastServerId))
-            {
-                _nav.NavigateTo($"/{ActiveUpload.LastServerId}/{ActiveFileIndex}", false);
-            }
-            else if(!_nav.Uri.EndsWith("/"))
+            var currentUri = new Uri(_nav.Uri);
+            if (ActiveUpload == null)
             {
                 _nav.NavigateTo($"/", false);
+            }
+            else if (ActiveUpload.LastServerId == null && currentUri.Segments.Length != 1)
+            {
+                _nav.NavigateTo($"/", false);
+            }
+            else if (ActiveUpload.LastServerId != null)
+            {
+                if (currentUri.Segments.Length == 1)
+                {
+                    _nav.NavigateTo($"/{ActiveUpload!.LastServerId}/{ActiveFileIndex}", false);
+                }
+                else if (currentUri.Segments.Length == 3 && (currentUri.Segments[1] != ActiveUpload?.LastServerId
+                        || currentUri.Segments[2] != ActiveFileIndex.ToString()))
+                {
+                    _nav.NavigateTo($"/{ActiveUpload!.LastServerId}/{ActiveFileIndex}", false);
+                }
             }
         }
 

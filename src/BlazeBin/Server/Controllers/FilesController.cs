@@ -84,10 +84,10 @@ public class FilesController : ControllerBase
         Response.Headers.ContentDisposition = $"attachment; filename=\"{data.Filename}\"";
         return Content(data.Data, "application/json", Encoding.UTF8);
     }
-
+    
     // to maintain compatibility with the hastebin api in use on paste.mod.gg
     [HttpPost("documents")]
-    [RequestSizeLimit(400_000)]
+    [RequestSizeLimit(4_096_000)]
     [Consumes("text/plain")]
     public async Task<IActionResult>HastebinFilePost()
     {

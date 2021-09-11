@@ -18,14 +18,13 @@ public partial class PasteList : IDisposable
         return Task.CompletedTask;
     }
 
-    private async Task SelectUpload(MouseEventArgs e, string id)
+    private async Task SelectUpload(MouseEventArgs e, int index)
     {
         if (e.Detail > 1)
         {
             return;
         }
-        _ = State.Uploads ?? throw new ArgumentException(nameof(State.Uploads));
-        var index = State.Uploads.FindIndex(a => a.Id == id);
+
         await State.Dispatch(() => State.SelectUpload(index));
     }
 

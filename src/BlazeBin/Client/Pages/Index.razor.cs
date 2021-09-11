@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 
 namespace BlazeBin.Client.Pages;
 
@@ -40,37 +38,33 @@ public partial class Index : IDisposable
         }
     }
 
-
-
-    public override async Task SetParametersAsync(ParameterView parameters)
+    protected override async Task OnParametersSetAsync()
     {
-        UploadName = parameters.GetValueOrDefault<string>("uploadname");
-        ActiveIndex = parameters.GetValueOrDefault<string>("activeIndex");
         await ProcessUploadNameChange();
     }
 
-
     private async Task ProcessUploadNameChange()
     {
+        var initialStateChanged = false;
         if (UploadName != null)
         {
             var existing = State.Uploads?.FindIndex(a => a.LastServerId == UploadName);
             if (existing.HasValue && existing.Value != -1)
             {
-                State.SelectUpload(existing.Value);
+                initialStateChanged = initialStateChanged || State.SelectUpload(existing.Value);
             }
             else
             {
-                await State.ReadUpload(UploadName);
+                initialStateChanged = initialStateChanged || await State.ReadUpload(UploadName);
             }
         }
         else if ((State.Uploads?.Count ?? 0) > 0)
         {
-            State.SelectUpload(0);
+            initialStateChanged = initialStateChanged || State.SelectUpload(0);
         }
         else if ((State.Uploads?.Count ?? 0) == 0)
         {
-            await State.CreateUpload(true);
+            initialStateChanged = initialStateChanged || await State.CreateUpload(true);
         }
         else
         {
@@ -80,13 +74,11 @@ public partial class Index : IDisposable
         if (State.ActiveFileIndex != _activeIndex)
         {
             var index = Math.Max(State.ActiveFileIndex, _activeIndex);
-            await State.Dispatch(() => State.SetActiveFile(index));
+            initialStateChanged = initialStateChanged || State.SetActiveFile(index);
         }
-        else
-        {
-            // this is likely the first state change triggered in the rendering pipeline.
-            await State.Dispatch(() => Task.CompletedTask);
-        }
+
+        // this is likely the first state change triggered in the rendering pipeline.
+        await State.Dispatch(() => initialStateChanged);
     }
 
     private Task HandleStateChange()

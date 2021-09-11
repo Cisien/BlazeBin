@@ -1,6 +1,8 @@
 ﻿using BlazeBin.Shared;
 using BlazeBin.Shared.Extensions;
+
 using BlazorMonaco;
+
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -25,7 +27,7 @@ public partial class Editor : IAsyncDisposable
             Minimap = new EditorMinimapOptions { Enabled = !isNarrow },
             LineNumbers = isNarrow ? "off" : "on"
         });
-        
+
         await HandleStateChange();
     }
 
@@ -41,7 +43,7 @@ public partial class Editor : IAsyncDisposable
 
     private async Task ModelContentChanged(ModelContentChangedEvent changed)
     {
-        if(changed.Changes.Count == 0)
+        if (changed.Changes.Count == 0)
         {
             return;
         }
@@ -92,7 +94,7 @@ public partial class Editor : IAsyncDisposable
         var options = new StandaloneEditorConstructionOptions
         {
             AutomaticLayout = true,
-            Theme = "vs-dark"            
+            Theme = "vs-dark"
         };
 
         return options;
@@ -107,17 +109,17 @@ public partial class Editor : IAsyncDisposable
         // dispose models that aren't used anymore
         foreach (var model in models)
         {
-            if (!DataExistsForModel(model) && !await model.IsDisposed())
+            try
             {
-                try
+                if (!DataExistsForModel(model) && !await model.IsDisposed())
                 {
                     await model.DisposeModel();
                 }
-                catch (Exception)
-                {
-                    // sometimes this throws an "Unhandled exception rendering component: Cannot read properties of null (reading 'dispose')" exception in jsland,
-                    // even though everything is good on the C# side
-                }
+            }
+            catch (Exception)
+            {
+                // sometimes this throws an "Unhandled exception rendering component: Cannot read properties of null (reading 'dispose')" exception in jsland,
+                // even though everything is good on the C# side
             }
         }
 
@@ -159,7 +161,7 @@ public partial class Editor : IAsyncDisposable
             {
                 existingModel = await EnsureModelCreated(file);
             }
-            if(existingModel == null) // still
+            if (existingModel == null) // still
             {
                 // couldn't create the model (likely due to a race condition when swapping models too quickly)
                 continue;
@@ -203,7 +205,7 @@ public partial class Editor : IAsyncDisposable
         return true;
     }
 
-    private async Task<TextModel> EnsureModelCreated(FileData file)
+    private async Task<TextModel?> EnsureModelCreated(FileData file)
     {
         if (State.ActiveUpload == null)
         {
@@ -228,9 +230,10 @@ public partial class Editor : IAsyncDisposable
             {
                 // another unavoidable race condition where jsland throws an exception even though we validated it in c#
                 // Unhandled exception rendering component: ModelService: Cannot add model because it already exists!
+                return null;
             }
         }
-        return model!;
+        return model;
     }
 
     private static string GetUriForFile(FileBundle bundle, FileData file)

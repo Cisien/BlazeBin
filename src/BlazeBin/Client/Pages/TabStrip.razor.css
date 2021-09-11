@@ -2,7 +2,7 @@
 .tabstrip {
     height: 35px;
     overflow-y: clip;
-    overflow-x: scroll;
+    overflow-x: auto;
     white-space: nowrap;
     max-width: calc(100vw - 200px);
 }

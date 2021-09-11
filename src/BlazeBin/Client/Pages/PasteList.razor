@@ -4,9 +4,11 @@
             <span>Your Recent Sets</span>
         </div>
         <ul class="upload-list">
-            @foreach (var item in State.Uploads)
+            @for(var i = 0; i < State.Uploads.Count; i++)
             {
-                <li class="paste@(item.Id == State.ActiveUpload?.Id ? " selected" : "") @(item.LastServerId == null ? " dirty": "")" @onclick="@(e => SelectUpload(e, item.Id))" @onclick:stopPropagation @onclick:preventDefault title="@item.Id">
+                var item = State.Uploads[i];
+                var index = i;
+                <li class="paste@(item.Id == State.ActiveUpload?.Id ? " selected" : "") @(item.LastServerId == null ? " dirty": "")" @onclick="@(e => SelectUpload(e, index))" @onclick:stopPropagation @onclick:preventDefault title="@item.Id">
                     <div class="remove-paste-button" @onclick="@(e => RemoveUpload(e, @item.Id))" @onclick:stopPropagation @onclick:preventDefault title="Remove @item.Id">
                         <i class="fa fa-window-close" aria-hidden="true"></i>
                     </div>
