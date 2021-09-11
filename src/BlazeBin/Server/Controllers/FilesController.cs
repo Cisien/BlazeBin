@@ -54,12 +54,13 @@ public class FilesController : ControllerBase
     [RequestFormLimits(MultipartBodyLengthLimit = 409_600)]
     [RequestSizeLimit(409_600)]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> BasicSubmit([FromForm]string file)
+    public async Task<IActionResult> BasicSubmit([FromForm] string file)
     {
         var bundleId = _keygen.GenerateKey(12).ToString();
         var fileId = _keygen.GenerateKey(12).ToString();
         FileBundle bundle = new(bundleId, new List<FileData>());
-        bundle.Files.Add(new(fileId, "basic-post", file));
+        var lang = CrudeLanguageDetection(file);
+        bundle.Files.Add(new(fileId, $"basic-post.{lang}", file));
 
         var serialized = JsonSerializer.Serialize(bundle, new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
         var (_, data) = await WriteData("hastebin-post", serialized);
@@ -84,14 +85,14 @@ public class FilesController : ControllerBase
         Response.Headers.ContentDisposition = $"attachment; filename=\"{data.Filename}\"";
         return Content(data.Data, "application/json", Encoding.UTF8);
     }
-    
+
     // to maintain compatibility with the hastebin api in use on paste.mod.gg
     [HttpPost("documents")]
     [RequestSizeLimit(4_096_000)]
     [Consumes("text/plain")]
-    public async Task<IActionResult>HastebinFilePost()
+    public async Task<IActionResult> HastebinFilePost()
     {
-        if(!_config.HasteShim.Enabled)
+        if (!_config.HasteShim.Enabled)
         {
             return BadRequest(new { Error = "This feature is disabled" });
         }
@@ -118,23 +119,50 @@ public class FilesController : ControllerBase
         }
 
         var bodyResult = await Request.BodyReader.ReadAsync();
-        if(bodyResult.Buffer.Length == 0)
+        if (bodyResult.Buffer.Length == 0)
         {
             _logger.LogWarning("body empty for hastebin shim request");
             return BadRequest();
         }
-        
+
         var body = _encoder.GetString(bodyResult.Buffer);
-        
+
         var bundleId = _keygen.GenerateKey(12).ToString();
         var fileId = _keygen.GenerateKey(12).ToString();
         FileBundle bundle = new(bundleId, new List<FileData>());
-        bundle.Files.Add(new(fileId, "hastebin-post", body));
+        var lang = CrudeLanguageDetection(body);
+        bundle.Files.Add(new(fileId, $"hastebin-post.{lang}", body));
 
         var serialized = JsonSerializer.Serialize(bundle, new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
         var (_, data) = await WriteData("hastebin-post", serialized);
 
-        return Ok(new { Key = data.Id });
+        return Ok(new { Key = $"{ data.Id }/0" });
+    }
+
+    private string CrudeLanguageDetection(ReadOnlySpan<char> code)
+    {
+        var partial = code.Trim()[0..10];
+        if (partial.StartsWith("using"))
+        {
+            return "cs";
+        }
+        if (partial[0] == '{' || partial[0] == '[')
+        {
+            return "json";
+        }
+        if (partial[0] == '@')
+        {
+            return "cshtml";
+        }
+        if (partial.StartsWith("<!DOCTYPE", StringComparison.OrdinalIgnoreCase))
+        {
+            return "html";
+        }
+        if(partial[0] == '<')
+        {
+            return "xml";
+        }
+        return "txt";
     }
 
     private async Task<(Uri location, FileData result)> WriteData(string filename, string submitData)
