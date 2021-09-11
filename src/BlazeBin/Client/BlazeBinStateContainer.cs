@@ -570,12 +570,10 @@ public class BlazeBinStateContainer
             dispatchedName = methodBody.Method.Name;
             var parameters = methodBody.Method.GetParameters().Select(a => a.Name!).ToList() ?? new List<string>();
             var argTypes = methodBody.Arguments.Select(a => a.NodeType);
-            Console.WriteLine(string.Join(", ", argTypes));
             var values = methodBody.Arguments.Select(a =>
             {
                 if (a is ConstantExpression c)
                 {
-                    Console.WriteLine(c.Value);
                     return c.Value;
                 }
                 else
@@ -595,6 +593,12 @@ public class BlazeBinStateContainer
             var value = Expression.Lambda(memberBody).Compile().DynamicInvoke();
             var name = memberBody.Member.Name;
             d.Add(name, value);
+        }
+        else if (work.Body is ConstantExpression constBody)
+        {
+            dispatchedName = "() => ";
+            var value = constBody.Value;
+            d.Add($"", value);
         }
 
         _logger.LogInformation("State change: {stateChanged} with nav update: {doNavUpdate}; from {method} {filePath}: {lineNumber}. {dispatchedMethod}({params})", stateChanged, doNavUpdate, method, filePath, lineNumber, dispatchedName, string.Join(", ", d.Select(a => $"{a.Key} = {a.Value ?? "null"}")));
@@ -649,17 +653,12 @@ public class BlazeBinStateContainer
         if (!IsServerSideRender && doNavUpdate)
         {
             var currentUri = new Uri(_nav.Uri);
-            Console.WriteLine($"{ActiveUpload?.Id ?? "null"}/{ActiveFileIndex}");
-            Console.WriteLine(currentUri);
-            Console.WriteLine(ActiveUpload?.LastServerId ?? "null");
             if (ActiveUpload == null)
             {
-                Console.WriteLine("active upload is null: /");
                 _nav.NavigateTo($"/", false);
             }
             else if (ActiveUpload.LastServerId == null && currentUri.Segments.Length != 1)
             {
-                Console.WriteLine("lastServerId is null and the current uri is long");
                 _nav.NavigateTo($"/", false);
             }
             else if (ActiveUpload.LastServerId == null && currentUri.Segments.Length == 1)
@@ -670,13 +669,15 @@ public class BlazeBinStateContainer
             {
                 if (currentUri.Segments.Length == 1)
                 {
-                    Console.WriteLine("last server id isn't null and the current uri is short");
                     _nav.NavigateTo($"/{ActiveUpload!.LastServerId}/{ActiveFileIndex}", false);
                 }
-                else if (currentUri.Segments.Length == 3 && (currentUri.Segments[1] != ActiveUpload?.LastServerId
-                        || currentUri.Segments[2] != ActiveFileIndex.ToString()))
+                else if (currentUri.Segments.Length == 2)
                 {
-                    Console.WriteLine("last server id isn't null, the current url is long, and doesn't match desired");
+                    _nav.NavigateTo($"/{ActiveUpload!.LastServerId}/0", false);
+                }
+                else if (currentUri.Segments.Length == 3 && (currentUri.Segments[1] != ActiveUpload?.LastServerId
+                       || currentUri.Segments[2] != ActiveFileIndex.ToString()))
+                {
                     _nav.NavigateTo($"/{ActiveUpload!.LastServerId}/{ActiveFileIndex}", false);
                 }
                 else

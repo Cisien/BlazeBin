@@ -15,12 +15,10 @@ public partial class App : IDisposable
 
     public override async Task SetParametersAsync(ParameterView parameters)
     {
-        Console.WriteLine("SetParams Called");
         await State.InitializeUploadLists();
 
         if (!State.IsServerSideRender)
         {
-            Console.WriteLine("not server render");
             Nav.LocationChanged += LocationChanged;
 
             if (AppState.TryTakeAsJson<Error>("server-side-error", out var serverError) && serverError != null)
@@ -48,7 +46,6 @@ public partial class App : IDisposable
         }
         else
         {
-            Console.WriteLine("Server render");
             AppState.OnPersisting += PersistingServerState;
         }
         await base.SetParametersAsync(parameters);
@@ -67,7 +64,6 @@ public partial class App : IDisposable
 
     public Task PersistingServerState()
     {
-        Console.WriteLine("PersistingServerState");
         AppState.PersistAsJson("server-side-error", State.Error);
         return Task.CompletedTask;
     }

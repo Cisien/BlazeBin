@@ -12,7 +12,6 @@ using BlazeBin.Shared.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Rewrite;
-using Microsoft.Identity.Client;
 using Microsoft.Net.Http.Headers;
 
 namespace BlazeBin.Server
