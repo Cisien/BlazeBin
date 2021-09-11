@@ -4,47 +4,15 @@ namespace BlazeBin.Client.Pages;
 
 public partial class Index : IDisposable
 {
-    private BlazeBinStateContainer? _state;
-    [Inject]
-    private BlazeBinStateContainer State
-    {
-        get { return _state!; }
-        set
-        {
-            if (_state != null)
-            {
-                _state.OnChange -= HandleStateChange;
-            }
-            _state = value;
-            _state.OnChange += HandleStateChange;
-        }
-    }
+    [Inject] private BlazeBinStateContainer State { get; set; } = null!;
 
-    [Parameter]
-    public string? UploadName { get; set; }
+    [Parameter] public string? UploadName { get; set; }
+    [Parameter] public string? ActiveIndex { get; set; }
 
-    private int _activeIndex;
-    [Parameter]
-    public string? ActiveIndex
+    protected override async Task OnInitializedAsync()
     {
-        get
-        {
-            return _activeIndex.ToString();
-        }
-        set
-        {
-            var val = int.Parse(value ?? "-1");
-            _activeIndex = val;
-        }
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        await ProcessUploadNameChange();
-    }
-
-    private async Task ProcessUploadNameChange()
-    {
+        Console.WriteLine("OnInit");
+        State.OnChange += HandleStateChange;
         var initialStateChanged = false;
         if (UploadName != null)
         {
@@ -71,13 +39,13 @@ public partial class Index : IDisposable
             throw new InvalidOperationException("An initial state wasn't accounted for!");
         }
 
-        if (State.ActiveFileIndex != _activeIndex)
+        _ = int.TryParse(ActiveIndex, out var index);
+        if (ActiveIndex != null && State.ActiveFileIndex != index)
         {
-            var index = Math.Max(State.ActiveFileIndex, _activeIndex);
+            index = Math.Max(State.ActiveFileIndex, index);
             initialStateChanged = initialStateChanged || State.SetActiveFile(index);
         }
 
-        // this is likely the first state change triggered in the rendering pipeline.
         await State.Dispatch(() => initialStateChanged);
     }
 

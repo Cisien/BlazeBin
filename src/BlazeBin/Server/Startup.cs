@@ -12,6 +12,7 @@ using BlazeBin.Shared.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Rewrite;
+using Microsoft.Identity.Client;
 using Microsoft.Net.Http.Headers;
 
 namespace BlazeBin.Server
@@ -61,7 +62,12 @@ namespace BlazeBin.Server
             services.AddScoped<IStorageService, FileStorageService>();
             services.AddScoped<IClientStorageService, ServerSideClientStorageService>();
             services.AddScoped<IUploadService, ServerSideUploadService>();
-            services.AddScoped<Client.BlazeBinStateContainer>();
+            services.AddScoped(provider => {
+                var state = ActivatorUtilities.CreateInstance<Client.BlazeBinStateContainer>(provider);
+                state.IsServerSideRender = true;
+                state.CreateUpload(true).GetAwaiter().GetResult();
+                return state;
+            });
             services.AddHealthChecks()
                 .AddCheck<FilesystemAvailableCheck>("filesystem_availability")
                 .AddCheck<FilesystemWritableCheck>("filesystem_writable");

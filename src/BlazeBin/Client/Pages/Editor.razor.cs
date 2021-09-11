@@ -175,6 +175,7 @@ public partial class Editor : IAsyncDisposable
                     continue;
                 }
                 await _editor.SetModel(existingModel);
+                await _editor.Focus();
             }
         }
     }

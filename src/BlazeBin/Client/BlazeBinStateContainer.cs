@@ -81,7 +81,7 @@ public class BlazeBinStateContainer
 
     public event Func<Task>? OnChange;
 
-    public BlazeBinStateContainer(ILogger<BlazeBinStateContainer> logger, IUploadService uploadSvc, IKeyGeneratorService keygen, IClientStorageService storage, NavigationManager nav)
+    public BlazeBinStateContainer(ILogger<BlazeBinStateContainer> logger, IUploadService uploadSvc, IKeyGeneratorService keygen, IClientStorageService storage, NavigationManager nav, BlazeBinConfiguration? appConfig = null)
     {
         _uploadSvc = uploadSvc;
         _keygen = keygen;
@@ -91,6 +91,11 @@ public class BlazeBinStateContainer
         History = new();
         Favorites = new();
         Uploads = new();
+
+        if(appConfig != null)
+        {
+            ClientConfig = appConfig.Client;
+        }
     }
 
     public bool StoreAntiforgeryToken(string? token)
@@ -518,7 +523,7 @@ public class BlazeBinStateContainer
 
     #region Dispatch
 #if DEBUG
-    public async Task Dispatch(Expression<Func<Task<bool>>> work, [CallerMemberName] string method = "", [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = -1)
+    public async Task Dispatch(Expression<Func<Task<bool>>> work, bool doNavUpdate = true, [CallerMemberName] string method = "", [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = -1)
     {
         bool stateChanged = false;
         try
@@ -529,8 +534,70 @@ public class BlazeBinStateContainer
         {
             stateChanged = stateChanged || ShowError("Unhandled Exception", ex.ToString());
         }
-        _logger.LogInformation("State change: {stateChanged}; from {method} {filePath}: {lineNumber}. {dispatchedMethod}", stateChanged, method, filePath, lineNumber, work.Body);
 
+        DoDebugLogging(work, doNavUpdate, method, filePath, lineNumber, stateChanged);
+        if (stateChanged)
+        {
+            await StateHasChanged(doNavUpdate);
+        }
+    }
+
+    public async Task Dispatch(Expression<Func<bool>> work, bool doNavUpdate = true, [CallerMemberName] string method = "", [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = -1)
+    {
+        bool stateChanged = false;
+        try
+        {
+            stateChanged = work.Compile()();
+        }
+        catch (Exception ex)
+        {
+            stateChanged = stateChanged || ShowError("Unhandled Exception", ex.ToString());
+        }
+        DoDebugLogging(work, doNavUpdate, method, filePath, lineNumber, stateChanged);
+
+        if (stateChanged)
+        {
+            await StateHasChanged(doNavUpdate);
+        }
+    }
+
+    private void DoDebugLogging<T>(Expression<T> work, bool doNavUpdate, string method, string filePath, int lineNumber, bool stateChanged)
+    {
+        var d = new Dictionary<string, object?>();
+        var dispatchedName = "[null]";
+        if (work.Body is MethodCallExpression methodBody)
+        {
+            dispatchedName = methodBody.Method.Name;
+            var parameters = methodBody.Method.GetParameters().Select(a => a.Name!).ToList() ?? new List<string>();
+            var argTypes = methodBody.Arguments.Select(a => a.NodeType);
+            Console.WriteLine(string.Join(", ", argTypes));
+            var values = methodBody.Arguments.Select(a =>
+            {
+                if (a is ConstantExpression c)
+                {
+                    Console.WriteLine(c.Value);
+                    return c.Value;
+                }
+                else
+                {
+                    return Expression.Lambda(a).Compile().DynamicInvoke();
+                }
+            }).ToList() ?? new List<object?>();
+
+            for (var i = 0; i < parameters.Count; i++)
+            {
+                d.Add(parameters[i], values[i]);
+            }
+        }
+        else if (work.Body is MemberExpression memberBody)
+        {
+            dispatchedName = "() => ";
+            var value = Expression.Lambda(memberBody).Compile().DynamicInvoke();
+            var name = memberBody.Member.Name;
+            d.Add(name, value);
+        }
+
+        _logger.LogInformation("State change: {stateChanged} with nav update: {doNavUpdate}; from {method} {filePath}: {lineNumber}. {dispatchedMethod}({params})", stateChanged, doNavUpdate, method, filePath, lineNumber, dispatchedName, string.Join(", ", d.Select(a => $"{a.Key} = {a.Value ?? "null"}")));
         if (Uploads.SelectMany(a => a.Files).SelectMany(a => a.Data).Count() + (AdHocBundle?.Files.SelectMany(a => a.Data).Count() ?? 0) > 2000)
         {
             _logger.LogInformation("State: <too large to serialize>");
@@ -539,14 +606,9 @@ public class BlazeBinStateContainer
         {
             _logger.LogInformation("State: {state}", JsonSerializer.Serialize(this, new JsonSerializerOptions { IncludeFields = true, WriteIndented = true, IgnoreReadOnlyFields = false }));
         }
-
-        if (stateChanged)
-        {
-            await StateHasChanged();
-        }
     }
 #else
-    public async Task Dispatch(Func<Task<bool>> work)
+    public async Task Dispatch(Func<Task<bool>> work, bool doNavUpdate = true)
     {
         bool stateChanged = false;
         try
@@ -560,41 +622,10 @@ public class BlazeBinStateContainer
 
         if(stateChanged) 
         {
-            await StateHasChanged();
+            await StateHasChanged(doNavUpdate);
         }
     }
-#endif
-
-#if DEBUG
-    public async Task Dispatch(Expression<Func<bool>> work, [CallerMemberName] string method = "", [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = -1)
-    {
-        bool stateChanged = false;
-        try
-        {
-            stateChanged = work.Compile()();
-        }
-        catch (Exception ex)
-        {
-            stateChanged = stateChanged || ShowError("Unhandled Exception", ex.ToString());
-        }
-        _logger.LogInformation("State change: {stateChanged}; from {method} {filePath}: {lineNumber}. {dispatchedMethod}", stateChanged, method, filePath, lineNumber, work.Body);
-
-        if (Uploads.SelectMany(a => a.Files).SelectMany(a => a.Data).Count() + (AdHocBundle?.Files.SelectMany(a => a.Data).Count() ?? 0) > 2000)
-        {
-            _logger.LogInformation("State: <too large to serialize>");
-        }
-        else
-        {
-            _logger.LogInformation("State: {state}", JsonSerializer.Serialize(this, new JsonSerializerOptions { IncludeFields = true, WriteIndented = true, IgnoreReadOnlyFields = false }));
-        }
-
-        if (stateChanged)
-        {
-            await StateHasChanged();
-        }
-    }
-#else
-    public async Task Dispatch(Func<bool> work)
+    public async Task Dispatch(Func<bool> work, bool doNavUpdate = true)
     {
         bool stateChanged = false;
         try
@@ -608,35 +639,54 @@ public class BlazeBinStateContainer
 
         if(stateChanged) 
         {
-            await StateHasChanged();
+            await StateHasChanged(doNavUpdate);
         }
     }
 #endif
 
-    private async Task StateHasChanged()
+    private async Task StateHasChanged(bool doNavUpdate = false)
     {
-        if (!IsServerSideRender)
+        if (!IsServerSideRender && doNavUpdate)
         {
             var currentUri = new Uri(_nav.Uri);
+            Console.WriteLine($"{ActiveUpload?.Id ?? "null"}/{ActiveFileIndex}");
+            Console.WriteLine(currentUri);
+            Console.WriteLine(ActiveUpload?.LastServerId ?? "null");
             if (ActiveUpload == null)
             {
+                Console.WriteLine("active upload is null: /");
                 _nav.NavigateTo($"/", false);
             }
             else if (ActiveUpload.LastServerId == null && currentUri.Segments.Length != 1)
             {
+                Console.WriteLine("lastServerId is null and the current uri is long");
                 _nav.NavigateTo($"/", false);
+            }
+            else if (ActiveUpload.LastServerId == null && currentUri.Segments.Length == 1)
+            {
+                // url is already /, noop
             }
             else if (ActiveUpload.LastServerId != null)
             {
                 if (currentUri.Segments.Length == 1)
                 {
+                    Console.WriteLine("last server id isn't null and the current uri is short");
                     _nav.NavigateTo($"/{ActiveUpload!.LastServerId}/{ActiveFileIndex}", false);
                 }
                 else if (currentUri.Segments.Length == 3 && (currentUri.Segments[1] != ActiveUpload?.LastServerId
                         || currentUri.Segments[2] != ActiveFileIndex.ToString()))
                 {
+                    Console.WriteLine("last server id isn't null, the current url is long, and doesn't match desired");
                     _nav.NavigateTo($"/{ActiveUpload!.LastServerId}/{ActiveFileIndex}", false);
                 }
+                else
+                {
+                    throw new InvalidOperationException("Unexpected state");
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("Unexpected state");
             }
         }
 

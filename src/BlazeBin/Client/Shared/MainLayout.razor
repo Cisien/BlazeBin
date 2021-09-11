@@ -1,41 +1,23 @@
 ﻿@inherits LayoutComponentBase
+@inject BlazeBinStateContainer state
 
-<section class="container@(clientSideRendered ? "" : " blur")">
+<section class="container@(state.IsServerSideRender ? " blur" : "")">
     @Body
 </section>
 <Footer />
-@if (!clientSideRendered)
+@if (state.IsServerSideRender)
 {
     <div class="loading-modal">
-            <div class="loader"></div>
-            <div class="basic-link-container shown">
-                <span>Too slow?</span><br /><span>Try the <a href="@(uploadName == null ? "/basic" : $"/basic/viewer/{uploadName}/0")">basic</a> version of BlazeBin</span>
-            </div>
+        <div class="loader"></div>
+        <div class="basic-link-container shown">
+            <span>Too slow?</span><br /><span>Try the <a href="@(state.ActiveUpload?.LastServerId == null ? "/basic" : $"/basic/viewer/{state.ActiveUpload.LastServerId}/{state.ActiveFileIndex}")">basic</a> version of BlazeBin</span>
+        </div>
     </div>
 }
 
 @code {
-    bool clientSideRendered = false;
-    string? uploadName;
-
     protected override void OnInitialized()
     {
-        string? uploadName;
-        var routeData = (this.Body?.Target as RouteView)?.RouteData;
-        if(routeData?.RouteValues.TryGetValue("uploadName", out var parameterValue) ?? false)
-        {
-            uploadName = parameterValue.ToString();
-        }
-    }
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender)
-        {
-            clientSideRendered = true;
-            StateHasChanged();
-        }
-
-        base.OnAfterRender(firstRender);
+        Console.WriteLine("mainlayout init");
     }
 }

@@ -1,7 +1,3 @@
-@inject BlazeBinStateContainer state
-@inject ComponentApplicationState appState
-@inject ILogger<App> logger
-@implements IDisposable
 
 <Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
@@ -12,41 +8,5 @@
             <p>This set doesn't exist. Go to the <a style="color:white" href="/">editor</a></p>
         </LayoutView>
     </NotFound>
+    
 </Router>
-
-@code {
-    public override async Task SetParametersAsync(ParameterView parameters)
-    {
-        appState.OnPersisting += PersistingServerState;
-        await state.InitializeUploadLists();
-
-        if (appState.TryTakeAsJson<Error>("server-side-error", out var serverError) && serverError != null)
-        {
-            state.ShowError(serverError.Title, serverError.Text);
-        }
-
-        if (appState.TryTakeAsJson<string>("af-token", out var afToken))
-        {
-            state.StoreAntiforgeryToken(afToken);
-        }
-
-        if(appState.TryTakeAsJson<BlazeBinClient>("client-config", out var clientConfig) && clientConfig != null)
-        {
-            state.SetClientConfig(clientConfig);
-        }
-
-        await base.SetParametersAsync(parameters);
-    }
-
-    public Task PersistingServerState()
-    {
-        appState.PersistAsJson("server-side-error", state.Error);
-        return Task.CompletedTask;
-    }
-
-    public void Dispose()
-    {
-        appState.OnPersisting -= PersistingServerState;
-        GC.SuppressFinalize(this);
-    }
-}
