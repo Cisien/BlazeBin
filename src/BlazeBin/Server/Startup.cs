@@ -55,7 +55,8 @@ namespace BlazeBin.Server
                 o.Cookie.SecurePolicy = _env.IsProduction() ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest;
             });
 
-            services.AddResponseCompression(o => {
+            services.AddResponseCompression(o =>
+            {
                 o.EnableForHttps = true;
                 o.MimeTypes = new List<string>{
                     "application/json",
@@ -70,7 +71,8 @@ namespace BlazeBin.Server
             services.AddScoped<IStorageService, FileStorageService>();
             services.AddScoped<IClientStorageService, ServerSideClientStorageService>();
             services.AddScoped<IUploadService, ServerSideUploadService>();
-            services.AddScoped(provider => {
+            services.AddScoped(provider =>
+            {
                 var state = ActivatorUtilities.CreateInstance<Client.BlazeBinStateContainer>(provider);
                 state.IsServerSideRender = true;
                 state.CreateUpload(true).GetAwaiter().GetResult();
@@ -126,9 +128,8 @@ namespace BlazeBin.Server
 
             if (_config.Hosting.RedirecFromWww)
             {
-                var rewriteOpts = new RewriteOptions()
-                    .AddRedirectToNonWwwPermanent();
-                app.UseRewriter(rewriteOpts);
+                app.UseRewriter(new RewriteOptions()
+                    .AddRedirectToNonWwwPermanent());
             }
 
             if (env.IsDevelopment())
@@ -173,6 +174,7 @@ namespace BlazeBin.Server
             }
 
             app.UseResponseCompression();
+
             app.UseBlazorFrameworkFiles();
             if (_env.IsDevelopment())
             {
@@ -182,7 +184,8 @@ namespace BlazeBin.Server
             {
                 app.UseStaticFiles(new StaticFileOptions
                 {
-                    OnPrepareResponse = ctx => {
+                    OnPrepareResponse = ctx =>
+                    {
                         ctx.Context.Response.GetTypedHeaders().CacheControl = new CacheControlHeaderValue
                         {
                             MaxAge = TimeSpan.FromDays(1),
@@ -191,7 +194,7 @@ namespace BlazeBin.Server
                     }
                 });
             }
-            
+
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
