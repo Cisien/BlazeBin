@@ -7,7 +7,7 @@ public class FilesystemWritableCheck : IHealthCheck
 {
     private static ILogger<FilesystemWritableCheck>? _logger;
     private static string? _basePath;
-    private static HealthCheckResult _lastResult;
+    private static HealthCheckResult _lastResult = HealthCheckResult.Degraded("This check has not run yet");
 
     private static readonly Lazy<Timer> CheckTimer = new(new Timer(async (_) => await DoCheck(), null, TimeSpan.Zero, TimeSpan.FromMinutes(1)));
 

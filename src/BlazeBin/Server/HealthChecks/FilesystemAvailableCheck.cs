@@ -9,7 +9,7 @@ public class FilesystemAvailableCheck : IHealthCheck
     private static ILogger<FilesystemAvailableCheck>? _logger;
     private static readonly Lazy<Timer> CheckTimer = new(new Timer(DoCheck, null, TimeSpan.Zero, TimeSpan.FromMinutes(1)));
 
-    private static HealthCheckResult _lastResult;
+    private static HealthCheckResult _lastResult = HealthCheckResult.Degraded("This check has not run yet");
 
     public FilesystemAvailableCheck(ILogger<FilesystemAvailableCheck> logger, BlazeBinConfiguration config)
     {
