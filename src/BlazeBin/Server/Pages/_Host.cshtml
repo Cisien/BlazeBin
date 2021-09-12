@@ -10,6 +10,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="prefetch" href="/_framework/blazor.webassembly.js" as="script" asp-append-version="true" />
+    <link rel="prefetch" href="/_framework/dotnet.6.0.0-preview.7.21377.19.js" as="script" />
+    <link rel="prefetch" href="/_content/BlazorMonaco/jsInterop.js" as="script" asp-append-version="true" />
+    <link rel="prefetch" href="/_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js" as="script" asp-append-version="true" />
+    <link rel="prefetch" href="/_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js" as="script" asp-append-version="true" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
     <meta name="description" content="A tool for sharing your source code with the world!" />
@@ -36,8 +41,7 @@
     <link rel="stylesheet" type="text/css" href="css/application.css" asp-append-version="true" async />
 
     <link href="BlazeBin.Client.styles.css" rel="stylesheet" asp-append-version="true" async/>
-    <link href="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.css" rel="stylesheet" asp-append-version="true" async />
-
+    <link href="/_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.css" rel="stylesheet" asp-append-version="true" async />
     <component type="typeof(HeadOutlet)" render-mode="WebAssemblyPrerendered" />
 </head>
 <body>
@@ -47,9 +51,9 @@
     <main id="app">
         <component type="typeof(BlazeBin.Client.App)" render-mode="WebAssemblyPrerendered" />
     </main>
-    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js" asp-append-version="true"></script>
+    <script src="/_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js" asp-append-version="true"></script>
     <script>require.config({ paths: { 'vs': '_content/BlazorMonaco/lib/monaco-editor/min/vs' } });</script>
-    <script src="_content/BlazorMonaco/jsInterop.js" asp-append-version="true" async></script><script>
+    <script src="/_content/BlazorMonaco/jsInterop.js" asp-append-version="true" async></script><script>
         window.onresize = (e) => {
             if (window.blazorMonaco && window.blazorMonaco.editor) {
                 window.blazorMonaco.editor.layout('editor', {});
@@ -74,7 +78,7 @@
         appState.PersistAsJson("client-config", appConfig.Client);
     }
     <persist-component-state />
-    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js" asp-append-version="true"></script>
-    <script src="_framework/blazor.webassembly.js" asp-append-version="true" async></script>
+    <script src="/_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js" asp-append-version="true"></script>
+    <script src="/_framework/blazor.webassembly.js" asp-append-version="true"></script>
 </body>
 </html>
