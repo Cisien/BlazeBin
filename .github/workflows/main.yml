@@ -85,6 +85,8 @@ jobs:
         include-prerelease: true
     - name: build
       run: dotnet publish --configuration release -o output src/BlazeBin/Server/BlazeBin.Server.csproj
+    - name: bypass dumb default file check
+      run: echo "hello" > output/wwwroot/index.html
     - name: Azure Static Web Apps Deploy
       uses: Azure/static-web-apps-deploy@v1
       with:
