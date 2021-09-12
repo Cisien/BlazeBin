@@ -52,7 +52,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-to: type=gha, scope=${{github.repository}}
           cache-from: type=gha, scope=${{github.repository}}
-
   publish:
     if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
@@ -71,3 +70,29 @@ jobs:
           app-name: blazebin
           slot-name: staging
           images: ghcr.io/cisien/blazebin:main
+
+  build-static:
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v1.8.1
+      with:
+        dotnet-version: 6.x
+        include-prerelease: true
+    - name: build
+      run: dotnet publish --configuration release -o output src/BlazeBin/Server/BlazeBin.Server.csproj
+    - name: bypass dumb default file check
+      run: echo "hello" > output/wwwroot/index.html
+    - name: Azure Static Web Apps Deploy
+      uses: Azure/static-web-apps-deploy@v1
+      with:
+        action: upload
+        app_location: output/wwwroot
+        azure_static_web_apps_api_token: ${{ secrets.BBCONTENT_DEPLOY_TOKEN}}
+        app_artifact_location: content
+        skip_app_build: true
+      
