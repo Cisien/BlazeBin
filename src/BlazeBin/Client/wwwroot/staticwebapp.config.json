@@ -1,0 +1,8 @@
+{
+  "globalHeaders": {
+    "Access-Control-Allow-Origin": "https://blazebin.io, https://beta.blazebin.io, https://paste.mod.gg",
+    "Access-Control-Allow-Methods": "*",
+    "Access-Control-Allow-Headers": "*",
+    "Access-Control-Allow-Credentials": false
+  }
+}
