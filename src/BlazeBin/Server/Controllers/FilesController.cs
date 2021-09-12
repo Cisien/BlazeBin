@@ -142,6 +142,7 @@ public class FilesController : ControllerBase
     private string CrudeLanguageDetection(ReadOnlySpan<char> code)
     {
         var partial = code.Trim()[0..10];
+
         if (partial.StartsWith("using"))
         {
             return "cs";
