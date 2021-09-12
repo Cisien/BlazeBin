@@ -153,9 +153,6 @@ namespace BlazeBin.Server
                     context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
                     context.Response.Headers.TryAdd("X-Permitted-Cross-Domain-Policies", "none");
                     context.Response.Headers.TryAdd("Referrer-Policy", "same-origin");
-                    context.Response.Headers.TryAdd("Cross-Origin-Embedder-Policy", "require-corp");
-                    context.Response.Headers.TryAdd("Cross-Origin-Opener-Policy", "same-origin");
-                    context.Response.Headers.TryAdd("Cross-Origin-Resource-Policy", "same-site");
                     return next();
                 });
 
