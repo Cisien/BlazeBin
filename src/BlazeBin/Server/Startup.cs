@@ -55,6 +55,15 @@ namespace BlazeBin.Server
                 o.Cookie.SecurePolicy = _env.IsProduction() ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest;
             });
 
+            services.AddResponseCompression(o => {
+                o.EnableForHttps = true;
+                o.MimeTypes = new List<string>{
+                    "application/json",
+                    "application/javascript",
+                    "text/css"
+                };
+            });
+
             services.AddControllers();
             services.AddRazorPages();
             services.AddScoped<IKeyGeneratorService, AlphaKeyGeneratorService>();
@@ -163,6 +172,7 @@ namespace BlazeBin.Server
                 });
             }
 
+            app.UseResponseCompression();
             app.UseBlazorFrameworkFiles();
             if (_env.IsDevelopment())
             {
