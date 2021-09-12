@@ -32,7 +32,7 @@ public partial class Editor : IAsyncDisposable
         var isNarrow = windowWidth < 780;
         await _editor!.UpdateOptions(new GlobalEditorOptions
         {
-            Minimap = new EditorMinimapOptions { Enabled = !isNarrow },
+            Minimap = new EditorMinimapOptions { Enabled = !isNarrow},
             LineNumbers = isNarrow ? "off" : "on"
         });
 
@@ -102,7 +102,8 @@ public partial class Editor : IAsyncDisposable
         var options = new StandaloneEditorConstructionOptions
         {
             AutomaticLayout = true,
-            Theme = "vs-dark"
+            Theme = "vs-dark",
+            WordWrap = "on",
         };
 
         return options;
