@@ -5,30 +5,50 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 namespace BlazeBin.Server.HealthChecks;
 public class FilesystemAvailableCheck : IHealthCheck
 {
-    private readonly string _basePath;
-    private ILogger<FilesystemAvailableCheck> _logger;
+    private static string? _basePath;
+    private static ILogger<FilesystemAvailableCheck>? _logger;
+    private static readonly Lazy<Timer> CheckTimer = new(new Timer(DoCheck, null, TimeSpan.Zero, TimeSpan.FromMinutes(1)));
+
+    private static HealthCheckResult _lastResult;
 
     public FilesystemAvailableCheck(ILogger<FilesystemAvailableCheck> logger, BlazeBinConfiguration config)
     {
-        _basePath = config.BaseDirectory;
-        _logger = logger;
+        _basePath ??= config.BaseDirectory;
+        _logger ??= logger;
+
+        if(!CheckTimer.IsValueCreated)
+        {
+            _ = CheckTimer.Value;
+        }
     }
 
-    public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    private static void DoCheck(object? state)
     {
+        if(_basePath == null)
+        {
+            return;
+        }
+
         try
         {
             if (!Directory.Exists(_basePath))
             {
-                return Task.FromResult(HealthCheckResult.Unhealthy("Filesystem Unavailable"));
+                _lastResult = HealthCheckResult.Unhealthy("Filesystem Unavailable");
+                return;
             }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
-            _logger.LogError(ex, "Filesystem Unavailable");
-            return Task.FromResult(HealthCheckResult.Unhealthy("Filesystem Unavailable", ex));
+            _logger?.LogError(ex, "Filesystem Unavailable");
+            _lastResult = HealthCheckResult.Unhealthy("Filesystem Unavailable", ex);
+            return;
         }
 
-        return Task.FromResult(HealthCheckResult.Healthy());
+        _lastResult = HealthCheckResult.Healthy();
+    }
+
+    public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(_lastResult);
     }
 }
