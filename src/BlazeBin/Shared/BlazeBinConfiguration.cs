@@ -21,7 +21,6 @@ public class BlazeBinHosting
     public string? ProtoHeadername { get; private set; }
     public string? ForwardedForHeaderName { get; private set; }
     public bool RedirecFromWww { get; private set; } = false;
-    public string ContentRoot { get; private set; } = "/";
 }
 
 public class BlazeBinDataProtection
@@ -53,6 +52,7 @@ public class BlazeBinClient
     public string? AcceptableUsePolicyUrl { get; set; }
     public string? PrivacyPolicyUrl { get; set; }
     public string? GeneralPolicyUrl { get; set; }
+    public string ContentRoot { get; private set; } = "/";
 }
 
 public class BlazeBinHastebinShim

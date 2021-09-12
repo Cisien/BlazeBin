@@ -40,9 +40,9 @@
     </environment>
 
     <environment include="Production,Staging">
-        <link rel="stylesheet" href="@(appConfig.Hosting.ContentRoot)fa/css/font-awesome.min.css" asp-append-version="true" />
-        <link rel="stylesheet" href="@(appConfig.Hosting.ContentRoot)css/application.css" asp-append-version="true" />
-        <link rel="stylesheet"  href="@(appConfig.Hosting.ContentRoot)_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.css" asp-append-version="true" />
+        <link rel="stylesheet" href="@(appConfig.Client.ContentRoot)fa/css/font-awesome.min.css" asp-append-version="true" />
+        <link rel="stylesheet" href="@(appConfig.Client.ContentRoot)css/application.css" asp-append-version="true" />
+        <link rel="stylesheet"  href="@(appConfig.Client.ContentRoot)_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.css" asp-append-version="true" />
     </environment>
 
     <link rel="stylesheet" href="BlazeBin.Client.styles.css" asp-append-version="true" />
@@ -63,9 +63,9 @@
     </environment>
 
     <environment include="Production,Staging">
-        <script src="@(appConfig.Hosting.ContentRoot)_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js" asp-append-version="true"></script>
-        <script>require.config({ paths: { 'vs': '@(appConfig.Hosting.ContentRoot)_content/BlazorMonaco/lib/monaco-editor/min/vs' } });</script>
-        <script src="@(appConfig.Hosting.ContentRoot)_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js" asp-append-version="true"></script>
+        <script src="@(appConfig.Client.ContentRoot)_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js" asp-append-version="true"></script>
+        <script>require.config({ paths: { 'vs': '@(appConfig.Client.ContentRoot)_content/BlazorMonaco/lib/monaco-editor/min/vs' } });</script>
+        <script src="@(appConfig.Client.ContentRoot)_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js" asp-append-version="true"></script>
     </environment>
     <script src="/_framework/blazor.webassembly.js" asp-append-version="true"></script>
     <script src="/_content/BlazorMonaco/jsInterop.js" asp-append-version="true" async></script>
