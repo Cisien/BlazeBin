@@ -1,6 +1,7 @@
 using BlazeBin.Client.Services;
 using BlazeBin.Shared.Services;
 
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 namespace BlazeBin.Client;
@@ -9,6 +10,7 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = WebAssemblyHostBuilder.CreateDefault(args);
+        builder.RootComponents.Add<HeadOutlet>("head::after");
 
         builder.Services.AddSingleton(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
         builder.Services.AddSingleton<IKeyGeneratorService, AlphaKeyGeneratorService>();
