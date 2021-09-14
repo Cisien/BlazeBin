@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-using BlazeBin.Shared;
+﻿using BlazeBin.Shared;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
@@ -9,7 +7,7 @@ namespace BlazeBin.Client;
 public partial class App : IDisposable
 {
     [Inject] public BlazeBinStateContainer State { get; set; } = null!;
-    [Inject] public ComponentApplicationState AppState { get; set; } = null!;
+    [Inject] public PersistentComponentState AppState { get; set; } = null!;
     [Inject] public NavigationManager Nav { get; set; } = null!;
     [Inject] public ILogger<App> Logger { get; set; } = null!;
 
@@ -21,12 +19,12 @@ public partial class App : IDisposable
         {
             Nav.LocationChanged += LocationChanged;
 
-            if (AppState.TryTakeAsJson<Error>("server-side-error", out var serverError) && serverError != null)
+            if (AppState.TryTakeFromJson<Error>("server-side-error", out var serverError) && serverError != null)
             {
                 State.ShowError(serverError.Title, serverError.Text);
             }
 
-            if (AppState.TryTakeAsJson<string>("af-token", out var afToken))
+            if (AppState.TryTakeFromJson<string>("af-token", out var afToken))
             {
                 State.StoreAntiforgeryToken(afToken);
             }
@@ -35,7 +33,7 @@ public partial class App : IDisposable
                 throw new InvalidOperationException("Unable to get af-token from server state");
             }
 
-            if (AppState.TryTakeAsJson<BlazeBinClient>("client-config", out var clientConfig) && clientConfig != null)
+            if (AppState.TryTakeFromJson<BlazeBinClient>("client-config", out var clientConfig) && clientConfig != null)
             {
                 State.SetClientConfig(clientConfig);
             }
@@ -46,7 +44,7 @@ public partial class App : IDisposable
         }
         else
         {
-            AppState.OnPersisting += PersistingServerState;
+            AppState.RegisterOnPersisting(PersistingServerState);
         }
         await base.SetParametersAsync(parameters);
     }
@@ -70,7 +68,6 @@ public partial class App : IDisposable
 
     public void Dispose()
     {
-        AppState.OnPersisting -= PersistingServerState;
         Nav.LocationChanged -= LocationChanged;
 
         GC.SuppressFinalize(this);

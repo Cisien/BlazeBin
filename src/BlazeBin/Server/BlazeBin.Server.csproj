@@ -8,13 +8,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.1.0" />
-		<PackageReference Include="Azure.Identity" Version="1.5.0-beta.3" />
+		<PackageReference Include="Azure.Identity" Version="1.5.0-beta.4" />
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.18.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="6.0.0-preview.7.21378.6" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0-preview.7.21377.19" />
-		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="6.0.0-preview.7.21378.6" />
-		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.0-preview.7.21413.1" />
-		<PackageReference Include="System.Collections.Immutable" Version="6.0.0-preview.7.21377.19" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="6.0.0-rc.1.21452.15" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0-rc.1.21451.13" />
+		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="6.0.0-rc.1.21452.15" />
+		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.0-rc.1.21464.1" />
+		<PackageReference Include="System.Collections.Immutable" Version="6.0.0-rc.1.21451.13" />
 	</ItemGroup>
 
 	<ItemGroup>

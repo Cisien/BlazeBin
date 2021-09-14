@@ -2,10 +2,7 @@
 @page "/{uploadname}"
 @page "/{uploadname}/{activeIndex}"
 
-<HeadContent>
-    <!-- todo: validate fix for not showing in server-side render in preview 8/rc1 -->
-    <title>BlazeBin@(string.IsNullOrWhiteSpace(UploadName) ? "" : $" - {UploadName}")</title>
-</HeadContent>
+<PageTitle>BlazeBin@(string.IsNullOrWhiteSpace(UploadName) ? "" : $" - {UploadName}")</PageTitle>
 
 <div class="row header">
     <div class="col-left">
@@ -20,7 +17,7 @@
         <PasteList />
     </div>
     <div class="col-fill">
-         <Editor />
+        <Editor />
     </div>
 </div>
 

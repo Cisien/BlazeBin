@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 using BlazeBin.Client.Services;
 using BlazeBin.Shared;

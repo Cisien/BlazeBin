@@ -1,4 +1,7 @@
-﻿namespace BlazeBin.Server.Services;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace BlazeBin.Server.Services;
 public class ServerSideClientStorageService : Client.Services.IClientStorageService
 {
     private readonly Dictionary<string, object> _memStorage = new();

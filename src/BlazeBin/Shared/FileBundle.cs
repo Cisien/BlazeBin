@@ -1,4 +1,6 @@
-﻿namespace BlazeBin.Shared
+﻿using System.Collections.Generic;
+
+namespace BlazeBin.Shared
 {
     public record FileBundle(string Id, List<FileData> Files)
     {
