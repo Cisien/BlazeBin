@@ -17,6 +17,7 @@
 		<MetadataUpdaterSupport>false</MetadataUpdaterSupport>
 		<UseNativeHttpHandler>true</UseNativeHttpHandler>
 		<UseSystemResourceKeys>true</UseSystemResourceKeys>
+		<BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
 		
     </PropertyGroup>
 
