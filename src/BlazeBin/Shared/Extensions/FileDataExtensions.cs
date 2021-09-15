@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BlazeBin.Shared.Extensions
 {
@@ -134,8 +130,8 @@ namespace BlazeBin.Shared.Extensions
             ["io"] = "io",
             ["janet"] = "janet",
             ["java"] = "java",
-            ["js"] = "javascript",
-            ["jsx"] = "javascriptreact",
+            ["js"] = "js",
+            ["jsx"] = "js",
             ["jekyll"] = "jekyll",
             ["json"] = "json",
             ["jsonc"] = "jsonc",
@@ -152,7 +148,6 @@ namespace BlazeBin.Shared.Extensions
             ["less"] = "less",
             ["flex"] = "lex",
             ["lisp"] = "lisp",
-            ["lhs"] = "literatehaskell",
             ["log"] = "log",
             ["lol"] = "lolcode",
             ["lsl"] = "lsl",
@@ -184,8 +179,8 @@ namespace BlazeBin.Shared.Extensions
             ["things"] = "openHAB",
             ["pas"] = "pascal",
             ["pddl"] = "pddl",
-            ["plan"] = "pddlplan",
-            ["happenings"] = "pddlhappenings",
+            ["plan"] = "pddl_plan",
+            ["happenings"] = "pddl_happenings",
             ["pl"] = "perl",
             ["perl6"] = "pl6",
             ["pgsql"] = "pgsql",
@@ -272,7 +267,8 @@ namespace BlazeBin.Shared.Extensions
             ["tuc"] = "tuc",
             ["twig"] = "twig",
             ["ts"] = "typescript",
-            ["tsx"] = "typescriptreact",
+            ["d.ts"] = "typescriptdef",
+            ["tsx"] = "typescript",
             ["typoscript"] = "typo3",
             ["vb"] = "vb",
             ["cls"] = "vba",
