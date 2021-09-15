@@ -14,6 +14,16 @@
     });
 
     var key = config["ApplicationInsights:InstrumentationKey"];
+    string? bundleSegment = null;
+    if(Context.Request.RouteValues.TryGetValue("path", out object? path))
+    {
+        var parts = path?.ToString().Split("/") ?? new string[0];
+
+        if(parts.Length >= 1)
+        {
+            bundleSegment = parts[0];
+        }
+    }
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -54,7 +64,8 @@
 
     <link rel="stylesheet" href="BlazeBin.Client.styles.css" asp-append-version="true" />
 
-    <component type="typeof(HeadOutlet)" render-mode="WebAssemblyPrerendered" />
+    <title>BlazeBin@(bundleSegment == null ?"": $" - {bundleSegment}")</title>
+
 </head>
 <body>
 
