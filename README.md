@@ -89,7 +89,7 @@ volumes:
 <!-- ROADMAP -->
 ## Roadmap
 
-See the [open issues](https://github.com/Cisine/BlazeBin/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/Cisien/BlazeBin/issues) for a list of proposed features (and known issues).
 
 <!-- CONTRIBUTING -->
 ## Contributing
