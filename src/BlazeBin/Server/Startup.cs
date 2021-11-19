@@ -120,7 +120,7 @@ namespace BlazeBin.Server
                         // hack hack hack hack hack
                         for (var i = 0; i < 256; i++)
                         {
-                            for (var j = 0; i < 256; j++)
+                            for (var j = 0; j < 256; j++)
                             {
                                 options.KnownProxies.Add(IPAddress.Parse($"[::ffff:169.254.{i}.{j}]"));
                             }
