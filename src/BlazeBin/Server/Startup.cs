@@ -111,15 +111,20 @@ namespace BlazeBin.Server
                 services.Configure<ForwardedHeadersOptions>(options =>
                 {
                     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-                    // These three subnets encapsulate the applicable Azure subnets. At the moment, it's not possible to narrow it down further.
                     foreach (var network in _config.Hosting.KnownNetworks)
                     {
                         options.KnownNetworks.Add(new(IPAddress.Parse(network[0]), int.Parse(network[1])));
                     }
                     if (_config.Hosting.KnownProxies.Count == 0)
                     {
-                        options.KnownProxies.Add(IPAddress.IPv6Any);
-                        options.KnownProxies.Add(IPAddress.Any);
+                        // hack hack hack hack hack
+                        for (var i = 0; i < 256; i++)
+                        {
+                            for (var j = 0; i < 256; j++)
+                            {
+                                options.KnownProxies.Add(IPAddress.Parse($"[::ffff:169.254.{i}.{j}]"));
+                            }
+                        }
                     }
 
                     foreach (var proxy in _config.Hosting.KnownProxies)
