@@ -167,7 +167,9 @@ namespace BlazeBin.Server
 
                 app.Use((context, next) => {
 
-                    logger.LogWarning("Request: {path}; {host}; {isHttps}; {protocol}; {query}", context.Request.Path, context.Request.Host, context.Request.IsHttps, context.Request.Protocol, context.Request.QueryString);
+                    logger.LogWarning("Request: {path}; {host}; {isHttps}; {protocol}; {query}; {scheme}", 
+                        context.Request.Path, context.Request.Host, context.Request.IsHttps, 
+                        context.Request.Protocol, context.Request.QueryString, context.Request.Scheme);
 
                     return next();
                 });
