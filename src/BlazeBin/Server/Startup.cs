@@ -165,6 +165,13 @@ namespace BlazeBin.Server
                     app.UseForwardedHeaders();
                 }
 
+                app.Use((context, next) => {
+
+                    logger.LogWarning("Path: {path}", context.Request.Path);
+
+                    return next();
+                });
+
                 app.UseHttpsRedirection();
                 app.UseHsts();
 
