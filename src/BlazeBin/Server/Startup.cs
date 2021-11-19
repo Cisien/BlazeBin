@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text.Json;
 
@@ -12,6 +13,7 @@ using BlazeBin.Server.Services;
 using BlazeBin.Shared;
 using BlazeBin.Shared.Services;
 
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
@@ -131,10 +133,19 @@ namespace BlazeBin.Server
             }
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger, TelemetryClient client)
         {
             app.UseHealthChecks("/health");
             app.UseHealthChecks("/robots933456.txt");
+
+            app.Use((context, next) => {
+
+                var headers = string.Join("; ", context.Request.Headers.Select(a => $"{a.Key}={string.Join(", ", a.Value)}"));
+                client.TrackEvent("headersReceived", new Dictionary<string, string> { ["headers"] = headers });
+                logger.LogWarning("Headers: {headers}", headers);
+
+                return next();
+            });
 
             if (_config.Hosting.RedirecFromWww)
             {
