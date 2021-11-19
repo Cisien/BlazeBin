@@ -116,6 +116,12 @@ namespace BlazeBin.Server
                     {
                         options.KnownNetworks.Add(new(IPAddress.Parse(network[0]), int.Parse(network[1])));
                     }
+                    if (_config.Hosting.KnownProxies.Count == 0)
+                    {
+                        options.KnownProxies.Add(IPAddress.IPv6Any);
+                        options.KnownProxies.Add(IPAddress.Any);
+                    }
+
                     foreach (var proxy in _config.Hosting.KnownProxies)
                     {
                         options.KnownProxies.Add(IPAddress.Parse(proxy));
@@ -138,7 +144,8 @@ namespace BlazeBin.Server
             app.UseHealthChecks("/health");
             app.UseHealthChecks("/robots933456.txt");
 
-            app.Use((context, next) => {
+            app.Use((context, next) =>
+            {
 
                 var headers = string.Join("; ", context.Request.Headers.Select(a => $"{a.Key}={string.Join(", ", a.Value)}"));
                 client.TrackEvent("headersReceived", new Dictionary<string, string> { ["headers"] = headers });
@@ -165,10 +172,11 @@ namespace BlazeBin.Server
                     app.UseForwardedHeaders();
                 }
 
-                app.Use((context, next) => {
+                app.Use((context, next) =>
+                {
 
-                    logger.LogWarning("Request: {path}; {host}; {isHttps}; {protocol}; {query}; {scheme}", 
-                        context.Request.Path, context.Request.Host, context.Request.IsHttps, 
+                    logger.LogWarning("Request: {path}; {host}; {isHttps}; {protocol}; {query}; {scheme}",
+                        context.Request.Path, context.Request.Host, context.Request.IsHttps,
                         context.Request.Protocol, context.Request.QueryString, context.Request.Scheme);
 
                     return next();
