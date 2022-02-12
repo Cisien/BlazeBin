@@ -95,7 +95,7 @@ namespace BlazeBin.Server
                 .AddCheck<FilesystemWritableCheck>("filesystem_writable");
 
             services.AddHostedService<FileGroomingWorker>();
-            services.AddHostedService<StatsCollectionService>();
+            //services.AddHostedService<StatsCollectionService>();
 
             if (!_env.IsDevelopment())
             {
