@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text.Json;
 
@@ -13,7 +12,6 @@ using BlazeBin.Server.Services;
 using BlazeBin.Shared;
 using BlazeBin.Shared.Services;
 
-using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
@@ -95,7 +93,6 @@ namespace BlazeBin.Server
                 .AddCheck<FilesystemWritableCheck>("filesystem_writable");
 
             services.AddHostedService<FileGroomingWorker>();
-            //services.AddHostedService<StatsCollectionService>();
 
             if (!_env.IsDevelopment())
             {
@@ -144,20 +141,10 @@ namespace BlazeBin.Server
             }
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger, TelemetryClient client)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
             app.UseHealthChecks("/health");
             app.UseHealthChecks("/robots933456.txt");
-
-            app.Use((context, next) =>
-            {
-
-                var headers = string.Join("; ", context.Request.Headers.Select(a => $"{a.Key}={string.Join(", ", a.Value)}"));
-                client.TrackEvent("headersReceived", new Dictionary<string, string> { ["headers"] = headers });
-                logger.LogWarning("Headers: {headers}", headers);
-
-                return next();
-            });
 
             if (_config.Hosting.RedirecFromWww)
             {
@@ -176,16 +163,6 @@ namespace BlazeBin.Server
                 {
                     app.UseForwardedHeaders();
                 }
-
-                app.Use((context, next) =>
-                {
-
-                    logger.LogWarning("Request: {path}; {host}; {isHttps}; {protocol}; {query}; {scheme}",
-                        context.Request.Path, context.Request.Host, context.Request.IsHttps,
-                        context.Request.Protocol, context.Request.QueryString, context.Request.Scheme);
-
-                    return next();
-                });
 
                 app.UseHttpsRedirection();
                 app.UseHsts();

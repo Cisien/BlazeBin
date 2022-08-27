@@ -21,7 +21,7 @@ namespace BlazeBin.Server
                     webBuilder
                         .ConfigureAppConfiguration((ctx,bldr) => {
                             bldr.AddEnvironmentVariables("blazebin_")
-                            .AddApplicationInsightsSettings(developerMode: ctx.HostingEnvironment.IsDevelopment());
+                            .AddApplicationInsightsSettings(ctx.Configuration["ApplicationInsights:ConnectionString"], developerMode: ctx.HostingEnvironment.IsDevelopment());
                         })
                         .ConfigureLogging((ctx, bldr) =>
                         {

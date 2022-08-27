@@ -118,7 +118,7 @@ public class FilesController : ControllerBase
             return BadRequest();
         }
 
-        if (!_config.HasteShim.AllowedClientIps.Contains(callerIp))
+        if (!_config.HasteShim.AllowedClientIps.Contains(callerIp ?? string.Empty))
         {
             _logger.LogWarning("{ip} is not in the allowed list of ip addresses for hastebin shim request", callerIp);
             return BadRequest();
@@ -142,7 +142,7 @@ public class FilesController : ControllerBase
         var serialized = JsonSerializer.Serialize(bundle, new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
         var (_, data) = await WriteData("hastebin-post", serialized);
 
-        return Ok(new { Key = $"{ data.Id }/0" });
+        return Ok(new { Key = $"{data.Id}/0" });
     }
 
     private string CrudeLanguageDetection(ReadOnlySpan<char> code)
@@ -165,7 +165,7 @@ public class FilesController : ControllerBase
         {
             return "html";
         }
-        if(partial[0] == '<')
+        if (partial[0] == '<')
         {
             return "xml";
         }
